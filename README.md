@@ -1,5 +1,30 @@
 # bbox
 
+## Description
+
+
+## Table of Contents
+- [Getting Started](#getting-started)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Getting Started
+[Explain how to get started with your project. Include any prerequisites, installation instructions, and any other relevant information]
+
+## Installation
+[Provide instructions on how to install your project. Include any dependencies or system requirements]
+
+## Usage
+[Provide examples and instructions on how to use your project. Include any command line options or configuration settings]
+
+## Contributing
+[Explain how others can contribute to your project. Include guidelines for submitting pull requests, reporting issues, and any other relevant information]
+
+## License
+[Specify the license under which your project is distributed]
+
 
 
 ## Getting started
@@ -68,6 +93,25 @@ Within a particular ecosystem, there may be a common way of installing things, s
 
 ## Usage
 Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+
+
+
+### Trigger
+```sh
+go run main.go trigger \
+    --teamcity-username "<Username>" \
+    --teamcity-password '<Password>' \
+    --build-type-id "<BuildIDType>" \
+    --properties "key1=value1,key2=value2"
+```
+
+### Multi-Trigger
+```sh
+go run main.go multi-trigger \
+    --teamcity-username "<Username>" \
+    --teamcity-password '<Password>' \
+    --build-params-combination "<BuildIDType>;<Brnach>;<Properties key=value,key=value>" \
+```
 
 ## Support
 Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.

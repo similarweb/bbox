@@ -1,15 +1,13 @@
-package log
+package logger
 
 import (
-	"context"
 	"strings"
 
 	"github.com/sirupsen/logrus"
 )
 
-func InitializeLogger(ctx context.Context, level string) {
+func InitializeLogger(level string) {
 	level = strings.ToLower(level)
-	logrus.WithContext(ctx)
 	logrus.SetFormatter(&logrus.TextFormatter{
 		ForceColors:            true,
 		DisableLevelTruncation: false,
