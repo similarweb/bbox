@@ -13,12 +13,14 @@ import (
 
 var buildParamsCombinations []string
 var multiTriggerCmdName string = "multi-trigger"
+var multiArtifactsPath string = "./"
 
-// Definition for BuildParameters to hold each combination
+// BuildParameters Definition to hold each combination
 type BuildParameters struct {
-	buildTypeId    string
-	branchName     string
-	propertiesFlag map[string]string
+	buildTypeId       string
+	branchName        string
+	downloadArtifacts string
+	propertiesFlag    map[string]string
 }
 
 var multiTriggerCmd = &cobra.Command{
@@ -34,7 +36,6 @@ var multiTriggerCmd = &cobra.Command{
 		}
 		log.WithField("combinations", allCombinations).Debug("Here are the possible combinations")
 		triggerBuilds(allCombinations)
-
 	},
 }
 
@@ -43,6 +44,7 @@ func init() {
 
 	// Register the flags for Trigger command
 	multiTriggerCmd.PersistentFlags().StringSliceVarP(&buildParamsCombinations, "build-params-combination", "c", []string{}, "Combinations in 'buildTypeID;branchName;key1=value1,key2=value2' format. Repeatable.")
+	multiTriggerCmd.PersistentFlags().StringVar(&multiArtifactsPath, "artifacts-path", multiArtifactsPath, "Path to download Artifacts to")
 }
 
 // parseCombinations parses the combinations from the command line and returns a slice of BuildParameters
@@ -51,12 +53,12 @@ func parseCombinations(combinations []string) ([]BuildParameters, error) {
 
 	for _, combo := range combinations {
 		parts := strings.Split(combo, ";")
-		if len(parts) != 3 {
+		if len(parts) != 4 {
 			return nil, fmt.Errorf("invalid combination format: %s", combo)
 		}
 		properties := make(map[string]string)
-		if parts[2] != "" {
-			for _, prop := range strings.Split(parts[2], ",") {
+		if parts[3] != "" {
+			for _, prop := range strings.Split(parts[3], "&") {
 				kv := strings.SplitN(prop, "=", 2)
 				if len(kv) != 2 {
 					return nil, fmt.Errorf("invalid property format: %s", prop)
@@ -65,9 +67,10 @@ func parseCombinations(combinations []string) ([]BuildParameters, error) {
 			}
 		}
 		parsed = append(parsed, BuildParameters{
-			buildTypeId:    parts[0],
-			branchName:     parts[1],
-			propertiesFlag: properties,
+			buildTypeId:       parts[0],
+			branchName:        parts[1],
+			downloadArtifacts: parts[2],
+			propertiesFlag:    properties,
 		})
 	}
 
@@ -88,10 +91,11 @@ func triggerBuilds(params []BuildParameters) {
 			defer wg.Done() // Decrement the counter when the goroutine completes
 
 			logger := log.WithFields(log.Fields{
-				"teamcityURL": teamcityURL,
-				"branchName":  branchName,
-				"buildTypeId": p.buildTypeId,
-				"properties":  p.propertiesFlag,
+				"teamcityURL":       teamcityURL,
+				"branchName":        branchName,
+				"buildTypeId":       p.buildTypeId,
+				"properties":        p.propertiesFlag,
+				"downloadArtifacts": p.downloadArtifacts,
 			})
 
 			logger.Info("Triggering build")
@@ -105,6 +109,22 @@ func triggerBuilds(params []BuildParameters) {
 				"buildStatus": build.Status,
 				"buildState":  build.State,
 			}).Info("Build Finished")
+
+			// if build is not successful, exit with error
+			if build.Status != "SUCCESS" {
+				log.Error("Build did not finish successfully")
+				os.Exit(2)
+			}
+
+			if p.downloadArtifacts == "true" && client.BuildHasArtifact(build.ID) {
+				logger.Info("Downloading Artifacts")
+
+				err := client.DownloadArtifacts(build.ID, p.buildTypeId, multiArtifactsPath)
+				if err != nil {
+					log.Errorf("Error getting artifacts content: %s", err)
+					os.Exit(2)
+				}
+			}
 		}(param) // Pass the current parameters to the goroutine
 	}
 

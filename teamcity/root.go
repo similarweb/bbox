@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/avast/retry-go/v4"
+	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -284,7 +285,9 @@ func (tcc *TeamCityClient) DownloadArtifacts(buildID int, buildTypeId string, de
 		log.Errorf("Error creating dir %s: %s", destPath, err)
 		return err
 	}
-	artifactsZip := filepath.Join(destPath, "artifacts.zip")
+	// create uuid for temporary artifacts zip file, to prevent overwriting
+	fileID := uuid.New().String()
+	artifactsZip := filepath.Join(destPath, fileID+"-artifacts.zip")
 
 	log.WithField("artifactsPath", destPath).Info("Writing Artifacts to path")
 	err = utils.WriteContentToFile(artifactsZip, content)
