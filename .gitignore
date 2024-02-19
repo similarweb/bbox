@@ -1,0 +1,22 @@
+*.o
+*.a
+*.so
+
+# Folders
+_obj/
+_test/
+.vscode/
+.idea/
+
+# Go specific
+*.exe
+*.test
+*.prof
+/cov
+/dist
+/vendor
+
+.DS_Store
+
+# tests
+artifacts/
