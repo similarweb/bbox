@@ -3,13 +3,18 @@ package teamcity
 import (
 	"bbox/utils"
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/avast/retry-go/v4"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // TeamCityClient struct
@@ -118,6 +123,12 @@ func (tcc *TeamCityClient) TriggerBuildWithParameters(buildTypeId string, branch
 	return triggerBuildResponse, nil
 }
 
+// BuildHasArtifact returns true if the build has artifacts
+func (tcc *TeamCityClient) BuildHasArtifact(buildId int) bool {
+	artifactChildren, _ := tcc.GetArtifactChildren(buildId)
+	return artifactChildren.Count > 0
+}
+
 // TriggerAndWaitForBuild triggers a build and waits for it to finish
 func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName string, params map[string]string) (BuildStatusResponse, error) {
 	triggerResponse, err := tcc.TriggerBuildWithParameters(buildId, branchName, params)
@@ -136,38 +147,44 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 	// Exponential backoff parameters
 	baseDelay := 5 * time.Second // Initial delay of 5 seconds
 	maxDelay := 30 * time.Second // Maximum delay
-	factor := 2                  // Factor by which the delay is multiplied each attempt
-	attempt := 0                 // Initial attempt count
+	var factor uint = 2          // Factor by which the delay is multiplied each attempt
+	// todo
+	timeout := 10 * time.Minute
 
-	for {
-		status, err = tcc.GetBuildStatus(triggerResponse.ID)
-		if err != nil {
-			return BuildStatusResponse{}, err
-		}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
-		log.Debug("Build status: ", status)
-		if status.State == "finished" {
-			break
-		}
-
-		waitInterval := utils.CalculateBackoff(baseDelay, factor, maxDelay, attempt)
-
-		triggerLog.WithFields(log.Fields{
-			"waitingInterval": waitInterval,
-			"attemptNumber":   attempt,
-		}).Info("Build is still running")
-
-		time.Sleep(waitInterval)
-		attempt++
-	}
-
+	err = retry.Do(
+		func() error {
+			status, err = tcc.GetBuildStatus(triggerResponse.ID)
+			if err != nil {
+				return err
+			} else if status.State != "finished" {
+				return fmt.Errorf("build status is not finished")
+			}
+			return nil
+		},
+		retry.Attempts(0),
+		retry.Context(ctx),
+		// retry only if build is not finished yet, exit for another error
+		retry.RetryIf(func(err error) bool {
+			return strings.Contains(err.Error(), "build status is not finished")
+		}),
+		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+			delay := baseDelay * time.Duration(n*factor)
+			if delay > maxDelay {
+				return maxDelay
+			}
+			return delay
+		}),
+	)
 	return status, nil
 }
 
 // GetArtifactChildren returns the children of an artifact if any
 func (tcc *TeamCityClient) GetArtifactChildren(buildID int) (ArtifactChildrenResponse, error) {
 	getUrl := fmt.Sprintf("%s/httpAuth/app/rest/builds/id:%d/%s", tcc.base_url, buildID, "artifacts/children/")
-	log.Info("Getting build children from: ", getUrl)
+	log.Debug("Getting build children from: ", getUrl)
 
 	req, err := http.NewRequest("GET", getUrl, nil)
 
@@ -194,7 +211,7 @@ func (tcc *TeamCityClient) GetArtifactChildren(buildID int) (ArtifactChildrenRes
 	return ArtifactChildren, nil
 }
 
-// GetArtifactContent returns the content of an artifact
+// GetArtifactContentByPath GetArtifactContent returns the content of an artifact
 func (tcc *TeamCityClient) GetArtifactContentByPath(path string) ([]byte, error) {
 	getUrl := fmt.Sprintf("%s%s", tcc.base_url, path)
 	log.Debug("Getting artifact content from: ", getUrl)
@@ -247,4 +264,45 @@ func (tcc *TeamCityClient) GetAllBuildTypeArtifacts(buildID int, buildTypeId str
 	}
 
 	return io.ReadAll(resp.Body)
+}
+
+// DownloadArtifacts downloads all artifacts to given path and unzips them
+func (tcc *TeamCityClient) DownloadArtifacts(buildID int, buildTypeId string, destPath string) error {
+	content, err := tcc.GetAllBuildTypeArtifacts(buildID, buildTypeId)
+	if err != nil {
+		log.Errorf("Error getting artifacts content: %s", err)
+		return err
+	}
+
+	// if size of content is 0, then no artifacts were found
+	if len(content) == 0 {
+		return errors.New("artifacts not found")
+	}
+
+	err = utils.CreateDir(destPath)
+	if err != nil {
+		log.Errorf("Error creating dir %s: %s", destPath, err)
+		return err
+	}
+	artifactsZip := filepath.Join(destPath, "artifacts.zip")
+
+	log.WithField("artifactsPath", destPath).Info("Writing Artifacts to path")
+	err = utils.WriteContentToFile(artifactsZip, content)
+	if err != nil {
+		log.Errorf("Error writing content to file: %s", err)
+		return err
+	}
+
+	err = utils.UnzipFile(artifactsZip, destPath)
+	if err != nil {
+		log.Errorf("Error unzipping artifacts: %s", err)
+		return err
+	}
+
+	err = os.Remove(artifactsZip)
+	if err != nil {
+		log.Errorf("Error deleteing zip: %s", err)
+		return err
+	}
+	return nil
 }
