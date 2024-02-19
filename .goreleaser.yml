@@ -15,8 +15,6 @@ release:
 
 archives:
   - format: tar.gz
-    files:
-      - config.yaml
 
 gitlab_urls:
   api: http://gitlab.similarweb.io/api/v4/
