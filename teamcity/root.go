@@ -7,15 +7,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/avast/retry-go/v4"
-	uuid "github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/avast/retry-go/v4"
+	uuid "github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 )
 
 // TeamCityClient struct
@@ -171,6 +173,8 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 		retry.RetryIf(func(err error) bool {
 			return strings.Contains(err.Error(), "build status is not finished")
 		}),
+
+		// exponential backoff
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
 			delay := baseDelay * time.Duration(n*factor)
 			if delay > maxDelay {
@@ -307,5 +311,38 @@ func (tcc *TeamCityClient) DownloadArtifacts(buildID int, buildTypeId string, de
 		log.Errorf("Error deleteing zip: %s", err)
 		return err
 	}
+	return nil
+}
+
+// ClearTeamCityQueue cancels all queued builds in TeamCity using the REST API.
+func (tcc *TeamCityClient) ClearTeamCityQueue() error {
+
+	// Prepare the request URL and headers
+	reqURL := fmt.Sprintf("%s/app/rest/buildQueue", tcc.base_url)
+
+	log.WithField("reqURL", reqURL).Debug("Clearing TeamCity build queue")
+
+	req, err := http.NewRequest("DELETE", reqURL, nil)
+	if err != nil {
+		return fmt.Errorf("error creating request: %v", err)
+	}
+
+	req.SetBasicAuth(tcc.username, tcc.password)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	// Perform the HTTP DELETE request
+	response, err := tcc.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("error executing request to clear the queue: %v", err)
+	}
+	defer response.Body.Close()
+
+	// Check the response. Expecting HTTP Status No Content (204) or OK (200) as a success indicator.
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNoContent {
+		bodyBytes, _ := ioutil.ReadAll(response.Body) // Try reading response body for error message, if any
+		return fmt.Errorf("failed to clear the queue, status code: %d, response: %s", response.StatusCode, string(bodyBytes))
+	}
+
 	return nil
 }
