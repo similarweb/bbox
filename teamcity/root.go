@@ -174,7 +174,9 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 		retry.RetryIf(func(err error) bool {
 			return strings.Contains(err.Error(), "build status is not finished")
 		}),
-
+		retry.OnRetry(func(n uint, err error) {
+			log.Debugf("build not finished yet, checking againg in %d seconds", baseDelay*time.Duration(n*factor))
+		}),
 		// exponential backoff
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
 			delay := baseDelay * time.Duration(n*factor)
