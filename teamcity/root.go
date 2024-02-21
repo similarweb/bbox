@@ -150,7 +150,7 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 
 	// Exponential backoff parameters
 	baseDelay := 5 * time.Second // Initial delay of 5 seconds
-	maxDelay := 30 * time.Second // Maximum delay
+	maxDelay := 20 * time.Second // Maximum delay
 	var factor uint = 2          // Factor by which the delay is multiplied each attempt
 	// todo
 	timeout := 10 * time.Minute
@@ -174,15 +174,12 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 		retry.RetryIf(func(err error) bool {
 			return strings.Contains(err.Error(), "build status is not finished")
 		}),
-		retry.OnRetry(func(n uint, err error) {
-			log.Debugf("build not finished yet, checking againg in %d seconds", baseDelay*time.Duration(n*factor))
-		}),
-		// exponential backoff
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
 			delay := baseDelay * time.Duration(n*factor)
-			if delay > maxDelay {
-				return maxDelay
+			if time.Duration(delay.Seconds()) > time.Duration(maxDelay.Seconds()) {
+				delay = maxDelay
 			}
+			log.Infof("build not finished yet, rechecking in %d seconds", time.Duration(delay.Seconds()))
 			return delay
 		}),
 	)
