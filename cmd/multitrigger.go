@@ -6,9 +6,11 @@ import (
 	"github.com/pkg/errors"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/olekukonko/tablewriter"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -23,6 +25,16 @@ type BuildParameters struct {
 	branchName        string
 	downloadArtifacts bool
 	propertiesFlag    map[string]string
+}
+
+type BuildResult struct {
+	BuildTypeID         string
+	WebURL              string
+	BranchName          string
+	BuildStatus         string
+	BuildState          string
+	DownloadedArtifacts bool
+	Error               error
 }
 
 var multiTriggerCmd = &cobra.Command{
@@ -97,6 +109,7 @@ func parseCombinations(combinations []string) ([]BuildParameters, error) {
 func triggerBuilds(params []BuildParameters) {
 	client := teamcity.NewTeamCityClient(teamcityURL, teamcityUsername, teamcityPassword)
 
+	resultsChan := make(chan BuildResult)
 	var wg sync.WaitGroup
 	for _, param := range params {
 		// Increment the WaitGroup's counter for each goroutine
@@ -124,27 +137,40 @@ func triggerBuilds(params []BuildParameters) {
 			logger.WithFields(log.Fields{
 				"buildStatus": build.Status,
 				"buildState":  build.State,
+				//"buildURL":    build.WebURL,
 			}).Info("Build Finished")
 
-			// if build is not successful, exit with error
-			if build.Status != "SUCCESS" {
-				log.Error("Build did not finish successfully")
-				os.Exit(2)
+			downloadedArtifacts := false
+
+			if p.downloadArtifacts && err == nil && client.BuildHasArtifact(build.ID) {
+				logger.Info("Downloading Artifacts")
+				err = client.DownloadArtifacts(build.ID, p.buildTypeId, multiArtifactsPath)
+				downloadedArtifacts = err == nil
 			}
 
-			if p.downloadArtifacts && client.BuildHasArtifact(build.ID) {
-				logger.Info("Downloading Artifacts")
-
-				err := client.DownloadArtifacts(build.ID, p.buildTypeId, multiArtifactsPath)
-				if err != nil {
-					log.Errorf("Error getting artifacts content: %s", err)
-					os.Exit(2)
-				}
+			resultsChan <- BuildResult{
+				BuildTypeID: p.buildTypeId,
+				//WebURL:              build.WebURL,
+				BranchName:          p.branchName,
+				BuildStatus:         build.Status,
+				BuildState:          build.State,
+				DownloadedArtifacts: downloadedArtifacts,
+				Error:               err,
 			}
 		}(param) // Pass the current parameters to the goroutine
 	}
 
-	wg.Wait() // Wait for all goroutines to complete
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	var results []BuildResult
+	for result := range resultsChan {
+		results = append(results, result)
+	}
+
+	displayResults(results)
 }
 
 func isValidBuildID(buildID string) bool {
@@ -200,4 +226,26 @@ func validateParamKey(key string) bool {
 func validateParamValue(value string) bool {
 	matched, _ := regexp.MatchString(`^[a-zA-Z0-9\\;,*/@:_.-]*$`, value)
 	return matched
+}
+
+func displayResults(results []BuildResult) {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Build Type ID", "Branch Name", "Status", "State", "Artifacts Downloaded", "Error"})
+
+	for _, result := range results {
+		errorMessage := "None"
+		if result.Error != nil {
+			errorMessage = result.Error.Error()
+		}
+		table.Append([]string{
+			result.BuildTypeID,
+			result.BranchName,
+			result.BuildStatus,
+			result.BuildState,
+			strconv.FormatBool(result.DownloadedArtifacts),
+			errorMessage,
+		})
+	}
+
+	table.Render()
 }

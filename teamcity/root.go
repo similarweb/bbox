@@ -147,7 +147,7 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 
 	triggerLog.Info("Build triggered")
 	var status BuildStatusResponse
-
+	//status.WebURL = triggerResponse.WebURL
 	// Exponential backoff parameters
 	baseDelay := 5 * time.Second // Initial delay of 5 seconds
 	maxDelay := 20 * time.Second // Maximum delay
@@ -162,8 +162,10 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 		func() error {
 			status, err = tcc.GetBuildStatus(triggerResponse.ID)
 			if err != nil {
+				log.Errorf("Error getting build status: %s", err)
 				return err
 			} else if status.State != "finished" {
+				log.Debugf("%s state is: %s", buildId, status.State)
 				return fmt.Errorf("build status is not finished")
 			}
 			return nil
@@ -179,7 +181,7 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 			if time.Duration(delay.Seconds()) > time.Duration(maxDelay.Seconds()) {
 				delay = maxDelay
 			}
-			log.Infof("build not finished yet, rechecking in %d seconds", time.Duration(delay.Seconds()))
+			log.Infof("build %s not finished yet, rechecking in %d seconds", buildId, time.Duration(delay.Seconds()))
 			return delay
 		}),
 	)
