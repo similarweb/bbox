@@ -138,8 +138,9 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 	}
 
 	triggerLog := log.WithFields(log.Fields{
-		"buildUrl":    triggerResponse.WebURL,
-		"projectName": triggerResponse.BuildType.Name,
+		"buildUrl":        triggerResponse.WebURL,
+		"projectName":     triggerResponse.BuildType.Name,
+		"triggerResponse": triggerResponse,
 	})
 
 	triggerLog.Info("Build triggered")
