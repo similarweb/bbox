@@ -19,14 +19,14 @@ var clearQueueCmd = &cobra.Command{
 		teamcityClient := teamcity.NewTeamCityClient(teamcityURL, teamcityUsername, teamcityPassword)
 		logger := log.WithField("teamcityURL", teamcityURL)
 
-		logger.Info("Going to clear the TeamCity queue.")
+		logger.Info("going to clear the TeamCity queue.")
 
 		err := teamcityClient.ClearTeamCityQueue()
 		if err != nil {
-			log.Error("Error triggering build: ", err)
+			log.Error("error triggering build: ", err)
 			os.Exit(2)
 		}
-		logger.Info("Clearing the TeamCity queue was successful.")
+		logger.Info("clearing the TeamCity queue was successful.")
 	},
 }
 

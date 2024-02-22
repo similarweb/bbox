@@ -33,30 +33,30 @@ var triggerCmd = &cobra.Command{
 			"buildTypeId":       buildTypeId,
 			"properties":        propertiesFlag,
 			"downloadArtifacts": downloadArtifacts,
-		}).Debug("Triggering Build")
+		}).Debug("triggering Build")
 
 		triggerResponse, err := client.TriggerBuild(buildTypeId, branchName, propertiesFlag)
 
 		if err != nil {
-			log.Error("Error triggering build: ", err)
+			log.Error("error triggering build: ", err)
 			os.Exit(2)
 		}
 
 		log.WithFields(log.Fields{
 			"buildName": triggerResponse.BuildType.Name,
 			"webURL":    triggerResponse.WebURL,
-		}).Info("Build Triggered")
+		}).Info("build Triggered")
 
 		downloadedArtifacts := false
 		status := "UNKNOWN"
 
 		if waitForBuilds {
-			log.Infof("Waiting for build %s", triggerResponse.BuildType.Name)
+			log.Infof("waiting for build %s", triggerResponse.BuildType.Name)
 
 			build, err := client.WaitForBuild(buildTypeId, triggerResponse.ID, waitTimeout)
 
 			if err != nil {
-				log.Error("Error waiting for build: ", err)
+				log.Error("error waiting for build: ", err)
 				os.Exit(2)
 			}
 
@@ -66,10 +66,10 @@ var triggerCmd = &cobra.Command{
 			}).Infof("Build %s Finished", triggerResponse.BuildType.Name)
 
 			if downloadArtifacts && err == nil && client.BuildHasArtifact(build.ID) {
-				log.Infof("Downloading Artifacts for %s", triggerResponse.BuildType.Name)
+				log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
 				err = client.DownloadArtifacts(build.ID, buildTypeId, multiArtifactsPath)
 				if err != nil {
-					log.Errorf("Error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+					log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 				}
 				downloadedArtifacts = err == nil
 			}

@@ -22,9 +22,6 @@ var rootCmd = &cobra.Command{
 	Use:   "bbox",
 	Short: "bbox is a CLI tool for interacting with TeamCity and other CI/CD tools.",
 	Long:  `bbox is a CLI tool for interacting with TeamCity and other CI/CD tools.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

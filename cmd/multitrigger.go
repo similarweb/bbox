@@ -44,10 +44,10 @@ var multiTriggerCmd = &cobra.Command{
 	Short: "Multi-trigger a TeamCity Build",
 	Long:  `"Multi-trigger a TeamCity Build",`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Info("Multi-triggering builds , parsing possible combinations")
+		log.Debug("multi-triggering builds, parsing possible combinations")
 		allCombinations, err := parseCombinations(buildParamsCombinations)
 		if err != nil {
-			log.Errorf("Failed to parse combinations: %v", err)
+			log.Errorf("failed to parse combinations: %v", err)
 			os.Exit(1)
 		}
 		log.WithField("combinations", allCombinations).Debug("Here are the possible combinations")
@@ -130,12 +130,12 @@ func triggerBuilds(params []BuildParameters, waitForBuilds bool, waitTimeout tim
 				"buildTypeId":       p.buildTypeId,
 				"properties":        p.propertiesFlag,
 				"downloadArtifacts": p.downloadArtifacts,
-			}).Debug("Triggering Build")
+			}).Debug("triggering Build")
 
 			triggerResponse, err := client.TriggerBuild(p.buildTypeId, p.branchName, p.propertiesFlag)
 
 			if err != nil {
-				log.Error("Error triggering build: ", err)
+				log.Error("error triggering build: ", err)
 				return
 			}
 
@@ -148,24 +148,24 @@ func triggerBuilds(params []BuildParameters, waitForBuilds bool, waitTimeout tim
 			status := "UNKNOWN"
 
 			if waitForBuilds {
-				log.Infof("Waiting for build %s", triggerResponse.BuildType.Name)
+				log.Infof("waiting for build %s", triggerResponse.BuildType.Name)
 
 				build, err := client.WaitForBuild(triggerResponse.BuildType.Name, triggerResponse.ID, waitTimeout)
 
 				if err != nil {
-					log.Errorf("Error waiting for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+					log.Errorf("error waiting for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 				}
 
 				log.WithFields(log.Fields{
 					"buildStatus": build.Status,
 					"buildState":  build.State,
-				}).Infof("Build %s Finished", triggerResponse.BuildType.Name)
+				}).Infof("build %s Finished", triggerResponse.BuildType.Name)
 
 				if p.downloadArtifacts && err == nil && client.BuildHasArtifact(build.ID) {
-					log.Infof("Downloading Artifacts for %s", triggerResponse.BuildType.Name)
+					log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
 					err = client.DownloadArtifacts(build.ID, p.buildTypeId, multiArtifactsPath)
 					if err != nil {
-						log.Errorf("Error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+						log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 					}
 					downloadedArtifacts = err == nil
 				}
