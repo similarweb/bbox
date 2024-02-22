@@ -188,12 +188,22 @@ func triggerBuilds(params []BuildParameters, waitForBuilds bool, waitTimeout tim
 		close(resultsChan)
 	}()
 
+	buildFailed := false
+
 	var results []BuildResult
 	for result := range resultsChan {
 		results = append(results, result)
+		if result.BuildStatus != "SUCCESS" {
+			buildFailed = true
+		}
 	}
 
 	displayResults(results)
+
+	if buildFailed {
+		log.Error("one or more builds failed, more info in links above")
+		os.Exit(2)
+	}
 }
 
 func isValidBuildID(buildID string) bool {
