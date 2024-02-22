@@ -124,15 +124,13 @@ func triggerBuilds(params []BuildParameters, waitForBuilds bool, waitTimeout tim
 		go func(p BuildParameters) {
 			defer wg.Done() // Decrement the counter when the goroutine completes
 
-			logger := log.WithFields(log.Fields{
+			log.WithFields(log.Fields{
 				"teamcityURL":       teamcityURL,
 				"branchName":        branchName,
 				"buildTypeId":       p.buildTypeId,
 				"properties":        p.propertiesFlag,
 				"downloadArtifacts": p.downloadArtifacts,
-			})
-
-			logger.Info("Triggering build")
+			}).Debug("Triggering Build")
 
 			triggerResponse, err := client.TriggerBuild(p.buildTypeId, p.branchName, p.propertiesFlag)
 
@@ -141,41 +139,42 @@ func triggerBuilds(params []BuildParameters, waitForBuilds bool, waitTimeout tim
 				return
 			}
 
-			logger = log.WithFields(log.Fields{
+			log.WithFields(log.Fields{
 				"buildName": triggerResponse.BuildType.Name,
-				"webURL":    triggerResponse.BuildType.WebURL,
-			})
-			logger.Info("Build Triggered")
+				"webURL":    triggerResponse.WebURL,
+			}).Info("Build Triggered")
 
 			downloadedArtifacts := false
 			status := "UNKNOWN"
 
 			if waitForBuilds {
-				logger.Info("Waiting for build")
+				log.Infof("Waiting for build %s", triggerResponse.BuildType.Name)
 
-				build, err := client.WaitForBuild(p.buildTypeId, triggerResponse.ID, waitTimeout)
+				build, err := client.WaitForBuild(triggerResponse.BuildType.Name, triggerResponse.ID, waitTimeout)
 
 				if err != nil {
-					log.Error("Error waiting for build: ", err)
+					log.Errorf("Error waiting for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 				}
 
-				logger.WithFields(log.Fields{
+				log.WithFields(log.Fields{
 					"buildStatus": build.Status,
 					"buildState":  build.State,
-				}).Info("Build Finished")
+				}).Infof("Build %s Finished", triggerResponse.BuildType.Name)
 
 				if p.downloadArtifacts && err == nil && client.BuildHasArtifact(build.ID) {
-					logger.Info("Downloading Artifacts")
+					log.Infof("Downloading Artifacts for %s", triggerResponse.BuildType.Name)
 					err = client.DownloadArtifacts(build.ID, p.buildTypeId, multiArtifactsPath)
+					if err != nil {
+						log.Errorf("Error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+					}
 					downloadedArtifacts = err == nil
 				}
-
 				status = build.Status
 			}
 
 			resultsChan <- BuildResult{
 				BuildName:           triggerResponse.BuildType.Name,
-				WebURL:              triggerResponse.BuildType.WebURL,
+				WebURL:              triggerResponse.WebURL,
 				BranchName:          p.branchName,
 				BuildStatus:         status,
 				DownloadedArtifacts: downloadedArtifacts,
@@ -254,10 +253,7 @@ func validateParamValue(value string) bool {
 
 func displayResults(results []BuildResult) {
 	table := tablewriter.NewWriter(os.Stdout)
-	//table.SetAlignment(tablewriter.ALIGN_LEFT) // Align text to the left
-	table.SetRowLine(true) // Enable row line for clarity
-	//table.SetHeaderColor(tablewriter.Colors{tablewriter.FgHiBlueColor, tablewriter.Bold, tablewriter.BgBlackColor})
-	//table.SetColWidth(20)
+	table.SetRowLine(true)
 	numberOfLines := 7
 	buildCounter := 1
 	var data [][]string

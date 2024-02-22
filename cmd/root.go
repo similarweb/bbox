@@ -5,10 +5,8 @@ package cmd
 
 import (
 	"bbox/logger"
-	"os"
-	"time"
-
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var logLevel = "info"
@@ -17,7 +15,6 @@ var teamcityURL = "https://teamcity.similarweb.io"
 var (
 	teamcityUsername string
 	teamcityPassword string
-	Timeout          time.Duration
 )
 
 // rootCmd represents the base command  called without any subcommands

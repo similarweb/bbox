@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,7 +17,6 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
-	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -194,7 +194,7 @@ func (tcc *TeamCityClient) TriggerBuild(buildId string, branchName string, param
 }
 
 // WaitForBuild waits for a build to finish
-func (tcc *TeamCityClient) WaitForBuild(buildId string, buildNumber int, timeout time.Duration) (BuildStatusResponse, error) {
+func (tcc *TeamCityClient) WaitForBuild(buildName string, buildNumber int, timeout time.Duration) (BuildStatusResponse, error) {
 	var status BuildStatusResponse
 
 	baseDelay := 5 * time.Second // Initial delay of 5 seconds
@@ -212,7 +212,7 @@ func (tcc *TeamCityClient) WaitForBuild(buildId string, buildNumber int, timeout
 				log.Errorf("Error getting build status: %s", err)
 				return err
 			} else if status.State != "finished" {
-				log.Debugf("%s state is: %s", buildId, status.State)
+				log.Debugf("%s state is: %s", buildName, status.State)
 				return fmt.Errorf("build status is not finished")
 			}
 			return nil
@@ -228,7 +228,7 @@ func (tcc *TeamCityClient) WaitForBuild(buildId string, buildNumber int, timeout
 			if time.Duration(delay.Seconds()) > time.Duration(maxDelay.Seconds()) {
 				delay = maxDelay
 			}
-			log.Infof("build %s not finished yet, rechecking in %d seconds", buildId, time.Duration(delay.Seconds()))
+			log.Infof("build %s not finished yet, rechecking in %d seconds", buildName, time.Duration(delay.Seconds()))
 			return delay
 		}),
 	)
