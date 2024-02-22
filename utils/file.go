@@ -23,7 +23,7 @@ func CreateDir(path string) error {
 }
 
 func UnzipFile(zipFilePath, destDir string) error {
-	log.Infof("Unzipping file %s to %s", zipFilePath, destDir)
+	log.Debugf("Unzipping file %s to %s", zipFilePath, destDir)
 
 	r, err := zip.OpenReader(zipFilePath)
 	if err != nil {

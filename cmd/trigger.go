@@ -31,7 +31,7 @@ var triggerCmd = &cobra.Command{
 			"buildTypeId": buildTypeId})
 
 		logger.Info("Triggering Build")
-
+		// todo - use trigger + wait for build
 		build, err := teamcityClient.TriggerAndWaitForBuild(buildTypeId, branchName, propertiesFlag)
 		if err != nil {
 			log.Error("Error triggering build: ", err)

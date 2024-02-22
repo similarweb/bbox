@@ -147,12 +147,12 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 
 	triggerLog.Info("Build triggered")
 	var status BuildStatusResponse
-	//status.WebURL = triggerResponse.WebURL
+
 	// Exponential backoff parameters
 	baseDelay := 5 * time.Second // Initial delay of 5 seconds
 	maxDelay := 20 * time.Second // Maximum delay
 	var factor uint = 2          // Factor by which the delay is multiplied each attempt
-	// todo
+
 	timeout := 10 * time.Minute
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -161,6 +161,53 @@ func (tcc *TeamCityClient) TriggerAndWaitForBuild(buildId string, branchName str
 	err = retry.Do(
 		func() error {
 			status, err = tcc.GetBuildStatus(triggerResponse.ID)
+			if err != nil {
+				log.Errorf("Error getting build status: %s", err)
+				return err
+			} else if status.State != "finished" {
+				log.Debugf("%s state is: %s", buildId, status.State)
+				return fmt.Errorf("build status is not finished")
+			}
+			return nil
+		},
+		retry.Attempts(0),
+		retry.Context(ctx),
+		// retry only if build is not finished yet, exit for another error
+		retry.RetryIf(func(err error) bool {
+			return strings.Contains(err.Error(), "build status is not finished")
+		}),
+		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+			delay := baseDelay * time.Duration(n*factor)
+			if time.Duration(delay.Seconds()) > time.Duration(maxDelay.Seconds()) {
+				delay = maxDelay
+			}
+			log.Infof("build %s not finished yet, rechecking in %d seconds", buildId, time.Duration(delay.Seconds()))
+			return delay
+		}),
+	)
+	return status, nil
+}
+
+// TriggerBuild triggers a build
+func (tcc *TeamCityClient) TriggerBuild(buildId string, branchName string, params map[string]string) (TriggerBuildWithParametersResponse, error) {
+	return tcc.TriggerBuildWithParameters(buildId, branchName, params)
+}
+
+// WaitForBuild waits for a build to finish
+func (tcc *TeamCityClient) WaitForBuild(buildId string, buildNumber int, timeout time.Duration) (BuildStatusResponse, error) {
+	var status BuildStatusResponse
+
+	baseDelay := 5 * time.Second // Initial delay of 5 seconds
+	maxDelay := 20 * time.Second // Maximum delay
+	var factor uint = 2          // Factor by which the delay is multiplied each attempt
+
+	var err error
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	err = retry.Do(
+		func() error {
+			status, err = tcc.GetBuildStatus(buildNumber)
 			if err != nil {
 				log.Errorf("Error getting build status: %s", err)
 				return err
@@ -295,7 +342,7 @@ func (tcc *TeamCityClient) DownloadArtifacts(buildID int, buildTypeId string, de
 	fileID := uuid.New().String()
 	artifactsZip := filepath.Join(destPath, fileID+"-artifacts.zip")
 
-	log.WithField("artifactsPath", destPath).Info("Writing Artifacts to path")
+	log.WithField("artifactsPath", destPath).Debug("Writing Artifacts to path")
 	err = utils.WriteContentToFile(artifactsZip, content)
 	if err != nil {
 		log.Errorf("Error writing content to file: %s", err)

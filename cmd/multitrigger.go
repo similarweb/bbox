@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/olekukonko/tablewriter"
 	log "github.com/sirupsen/logrus"
@@ -16,8 +17,10 @@ import (
 )
 
 var buildParamsCombinations []string
-var multiTriggerCmdName string = "multi-trigger"
-var multiArtifactsPath string = "./"
+var multiTriggerCmdName = "multi-trigger"
+var multiArtifactsPath = "./"
+var waitForBuilds = true
+var waitTimeout = 30 * time.Minute
 
 // BuildParameters Definition to hold each combination
 type BuildParameters struct {
@@ -28,11 +31,10 @@ type BuildParameters struct {
 }
 
 type BuildResult struct {
-	BuildTypeID         string
+	BuildName           string
 	WebURL              string
 	BranchName          string
 	BuildStatus         string
-	BuildState          string
 	DownloadedArtifacts bool
 	Error               error
 }
@@ -49,7 +51,8 @@ var multiTriggerCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		log.WithField("combinations", allCombinations).Debug("Here are the possible combinations")
-		triggerBuilds(allCombinations)
+
+		triggerBuilds(allCombinations, waitForBuilds, waitTimeout)
 	},
 }
 
@@ -59,6 +62,8 @@ func init() {
 	// Register the flags for Trigger command
 	multiTriggerCmd.PersistentFlags().StringSliceVarP(&buildParamsCombinations, "build-params-combination", "c", []string{}, "Combinations as 'buildTypeID;branchName;downloadArtifactsBool;key1=value1&key2=value2' format. Repeatable. example: 'byBuildId;master;true;key=value&key2=value2'")
 	multiTriggerCmd.PersistentFlags().StringVar(&multiArtifactsPath, "artifacts-path", multiArtifactsPath, "Path to download Artifacts to")
+	multiTriggerCmd.PersistentFlags().BoolVarP(&waitForBuilds, "wait-for-builds", "w", waitForBuilds, "Wait for builds to finish and get status")
+	multiTriggerCmd.PersistentFlags().DurationVarP(&waitTimeout, "wait-timeout", "t", waitTimeout, "Timeout for waiting for builds to finish")
 }
 
 // parseCombinations parses the combinations from the command line and returns a slice of BuildParameters
@@ -106,7 +111,7 @@ func parseCombinations(combinations []string) ([]BuildParameters, error) {
 }
 
 // triggerBuilds triggers the builds for each set of build parameters
-func triggerBuilds(params []BuildParameters) {
+func triggerBuilds(params []BuildParameters, waitForBuilds bool, waitTimeout time.Duration) {
 	client := teamcity.NewTeamCityClient(teamcityURL, teamcityUsername, teamcityPassword)
 
 	resultsChan := make(chan BuildResult)
@@ -129,35 +134,54 @@ func triggerBuilds(params []BuildParameters) {
 
 			logger.Info("Triggering build")
 
-			build, err := client.TriggerAndWaitForBuild(p.buildTypeId, p.branchName, p.propertiesFlag)
+			triggerResponse, err := client.TriggerBuild(p.buildTypeId, p.branchName, p.propertiesFlag)
+
 			if err != nil {
-				log.Error(err)
+				log.Error("Error triggering build: ", err)
+				return
 			}
 
-			logger.WithFields(log.Fields{
-				"buildStatus": build.Status,
-				"buildState":  build.State,
-				//"buildURL":    build.WebURL,
-			}).Info("Build Finished")
+			logger = log.WithFields(log.Fields{
+				"buildName": triggerResponse.BuildType.Name,
+				"webURL":    triggerResponse.BuildType.WebURL,
+			})
+			logger.Info("Build Triggered")
 
 			downloadedArtifacts := false
+			status := "UNKNOWN"
 
-			if p.downloadArtifacts && err == nil && client.BuildHasArtifact(build.ID) {
-				logger.Info("Downloading Artifacts")
-				err = client.DownloadArtifacts(build.ID, p.buildTypeId, multiArtifactsPath)
-				downloadedArtifacts = err == nil
+			if waitForBuilds {
+				logger.Info("Waiting for build")
+
+				build, err := client.WaitForBuild(p.buildTypeId, triggerResponse.ID, waitTimeout)
+
+				if err != nil {
+					log.Error("Error waiting for build: ", err)
+				}
+
+				logger.WithFields(log.Fields{
+					"buildStatus": build.Status,
+					"buildState":  build.State,
+				}).Info("Build Finished")
+
+				if p.downloadArtifacts && err == nil && client.BuildHasArtifact(build.ID) {
+					logger.Info("Downloading Artifacts")
+					err = client.DownloadArtifacts(build.ID, p.buildTypeId, multiArtifactsPath)
+					downloadedArtifacts = err == nil
+				}
+
+				status = build.Status
 			}
 
 			resultsChan <- BuildResult{
-				BuildTypeID: p.buildTypeId,
-				//WebURL:              build.WebURL,
+				BuildName:           triggerResponse.BuildType.Name,
+				WebURL:              triggerResponse.BuildType.WebURL,
 				BranchName:          p.branchName,
-				BuildStatus:         build.Status,
-				BuildState:          build.State,
+				BuildStatus:         status,
 				DownloadedArtifacts: downloadedArtifacts,
 				Error:               err,
 			}
-		}(param) // Pass the current parameters to the goroutine
+		}(param)
 	}
 
 	go func() {
@@ -230,21 +254,44 @@ func validateParamValue(value string) bool {
 
 func displayResults(results []BuildResult) {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Build Type ID", "Branch Name", "Status", "State", "Artifacts Downloaded", "Error"})
-
+	//table.SetAlignment(tablewriter.ALIGN_LEFT) // Align text to the left
+	table.SetRowLine(true) // Enable row line for clarity
+	//table.SetHeaderColor(tablewriter.Colors{tablewriter.FgHiBlueColor, tablewriter.Bold, tablewriter.BgBlackColor})
+	//table.SetColWidth(20)
+	numberOfLines := 7
+	buildCounter := 1
+	var data [][]string
 	for _, result := range results {
 		errorMessage := "None"
 		if result.Error != nil {
 			errorMessage = result.Error.Error()
 		}
-		table.Append([]string{
-			result.BuildTypeID,
-			result.BranchName,
-			result.BuildStatus,
-			result.BuildState,
-			strconv.FormatBool(result.DownloadedArtifacts),
-			errorMessage,
-		})
+
+		data = append(data, [][]string{
+			{strconv.Itoa(buildCounter), ""},
+			{"Build Name", result.BuildName},
+			{"Web URL", result.WebURL},
+			{"Branch Name", result.BranchName},
+			{"Status", result.BuildStatus},
+			{"Artifacts Downloaded", strconv.FormatBool(result.DownloadedArtifacts)},
+			{"Error", errorMessage},
+		}...)
+
+		buildCounter++
+	}
+
+	for i, row := range data {
+		if i%numberOfLines == 0 {
+			table.Rich(row, []tablewriter.Colors{{tablewriter.Bold, tablewriter.FgHiBlueColor}})
+		} else if i%numberOfLines == 4 { // in this case we're in status line
+			if row[1] == "SUCCESS" {
+				table.Rich(row, []tablewriter.Colors{{}, {tablewriter.Bold, tablewriter.FgHiGreenColor}})
+			} else {
+				table.Rich(row, []tablewriter.Colors{{}, {tablewriter.Bold, tablewriter.FgHiRedColor}})
+			}
+		} else {
+			table.Append(row)
+		}
 	}
 
 	table.Render()

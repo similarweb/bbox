@@ -1,10 +1,9 @@
 package teamcity
 
 type BuildStatusResponse struct {
-	ID     int    `json:"id"`
-	Status string `json:"status"`
-	State  string `json:"state"`
-	//WebURL    string `json:"state"`
+	ID        int    `json:"id"`
+	Status    string `json:"status"`
+	State     string `json:"state"`
 	Artifacts struct {
 		Href string `json:"href"`
 	} `json:"artifacts"`
