@@ -4,7 +4,7 @@ builds:
     goos:
       - linux
       - darwin
-    ldflags: "-X gitlab.similarweb.io/infrastructure/bbox/cmd.Version={{.Version}} -X gitlab.similarweb.io/infrastructure/bbox/cmd.Commit={{.Commit}} "
+    ldflags: "-X gitlab.similarweb.io/infrastructure/bbox/version.version={{.Version}}"
     goarch:
       - amd64
       - arm64
