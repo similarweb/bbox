@@ -264,41 +264,30 @@ func validateParamValue(value string) bool {
 func displayResults(results []BuildResult) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetRowLine(true)
-	numberOfLines := 7
-	buildCounter := 1
+	table.SetHeader([]string{"Build Name", "Branch Name", "Status", "Artifacts Downloaded", "Error", "Web URL"})
+	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor}, tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor}, tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor}, tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor}, tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor}, tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor})
+	table.SetBorders(tablewriter.Border{Left: false, Top: true, Right: false, Bottom: true})
 	var data [][]string
 	for _, result := range results {
 		errorMessage := "None"
 		if result.Error != nil {
 			errorMessage = result.Error.Error()
 		}
-
 		data = append(data, [][]string{
-			{strconv.Itoa(buildCounter), ""},
-			{"Build Name", result.BuildName},
-			{"Web URL", result.WebURL},
-			{"Branch Name", result.BranchName},
-			{"Status", result.BuildStatus},
-			{"Artifacts Downloaded", strconv.FormatBool(result.DownloadedArtifacts)},
-			{"Error", errorMessage},
+			{result.BuildName, result.BranchName, result.BuildStatus, strconv.FormatBool(result.DownloadedArtifacts), errorMessage, fmt.Sprintf("\033]8;;%s\a%s\033]8;;\a", result.WebURL, "click_here")},
 		}...)
-
-		buildCounter++
 	}
 
-	for i, row := range data {
-		if i%numberOfLines == 0 {
-			table.Rich(row, []tablewriter.Colors{{tablewriter.Bold, tablewriter.FgHiBlueColor}})
-		} else if i%numberOfLines == 4 { // in this case we're in status line
-			if row[1] == "SUCCESS" {
-				table.Rich(row, []tablewriter.Colors{{}, {tablewriter.Bold, tablewriter.FgHiGreenColor}})
-			} else {
-				table.Rich(row, []tablewriter.Colors{{}, {tablewriter.Bold, tablewriter.FgHiRedColor}})
-			}
-		} else {
-			table.Append(row)
+	for _, row := range data {
+		status := row[2]
+		statusColor := tablewriter.FgHiRedColor
+		if status == "SUCCESS" {
+			statusColor = tablewriter.FgHiGreenColor
 		}
+		// color row cells
+		table.Rich(row, []tablewriter.Colors{{}, {}, {tablewriter.Bold, statusColor}, {}, {}, {tablewriter.Bold, tablewriter.FgHiBlueColor}})
 	}
 
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
 	table.Render()
 }
