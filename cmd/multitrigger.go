@@ -274,7 +274,7 @@ func displayResults(results []BuildResult) {
 			errorMessage = result.Error.Error()
 		}
 		data = append(data, [][]string{
-			{result.BuildName, result.BranchName, result.BuildStatus, strconv.FormatBool(result.DownloadedArtifacts), errorMessage, fmt.Sprintf("\033]8;;%s\a%s\033]8;;\a", result.WebURL, "click_here")},
+			{result.BuildName, result.BranchName, result.BuildStatus, strconv.FormatBool(result.DownloadedArtifacts), errorMessage, result.WebURL},
 		}...)
 	}
 
