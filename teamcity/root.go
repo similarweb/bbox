@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,6 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/avast/retry-go/v4"
 	log "github.com/sirupsen/logrus"
@@ -230,7 +231,7 @@ func (tcc *TeamCityClient) GetArtifactContentByPath(path string) ([]byte, error)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("statusCode: %s", resp.StatusCode)
+		return nil, fmt.Errorf("statusCode: %d", resp.StatusCode)
 	}
 
 	return io.ReadAll(resp.Body)
@@ -258,7 +259,7 @@ func (tcc *TeamCityClient) GetAllBuildTypeArtifacts(buildID int, buildTypeId str
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("statusCode: %s", resp.StatusCode)
+		return nil, fmt.Errorf("statusCode: %d", resp.StatusCode)
 	}
 
 	return io.ReadAll(resp.Body)
