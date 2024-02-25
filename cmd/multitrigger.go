@@ -285,7 +285,7 @@ func displayResults(results []BuildResult) {
 			statusColor = tablewriter.FgHiGreenColor
 		}
 		// color row cells
-		table.Rich(row, []tablewriter.Colors{{}, {}, {tablewriter.Bold, statusColor}, {}, {}, {tablewriter.Bold, tablewriter.FgHiBlueColor}})
+		table.Rich(row, []tablewriter.Colors{{}, {}, {tablewriter.Bold, statusColor}, {}, {}, {}})
 	}
 
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
