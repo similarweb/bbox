@@ -51,7 +51,7 @@ func (tcc *Client) GetBuildStatus(buildId int) (BuildStatusResponse, error) {
 // TriggerBuild triggers a build with parameters
 func (tcc *Client) TriggerBuild(buildTypeId string, branchName string, params map[string]string) (TriggerBuildWithParametersResponse, error) {
 	// Build the request payload with supplied parameters
-	var properties []map[string]string
+	properties := []map[string]string{}
 	for name, value := range params {
 		properties = append(properties, map[string]string{"name": name, "value": value})
 	}
@@ -90,7 +90,6 @@ func (tcc *Client) TriggerBuild(buildTypeId string, branchName string, params ma
 	}
 
 	log.Debugf("response status code: %d", resp.StatusCode)
-	log.Debugf("response body: %s", resp.Body)
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
