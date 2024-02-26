@@ -48,8 +48,8 @@ func (tcc *Client) GetBuildStatus(buildId int) (BuildStatusResponse, error) {
 	return *bs, nil
 }
 
-// TriggerBuildWithParameters triggers a build with parameters
-func (tcc *Client) TriggerBuildWithParameters(buildTypeId string, branchName string, params map[string]string) (TriggerBuildWithParametersResponse, error) {
+// TriggerBuild triggers a build with parameters
+func (tcc *Client) TriggerBuild(buildTypeId string, branchName string, params map[string]string) (TriggerBuildWithParametersResponse, error) {
 	// Build the request payload with supplied parameters
 	var properties []map[string]string
 	for name, value := range params {
@@ -90,7 +90,7 @@ func (tcc *Client) TriggerBuildWithParameters(buildTypeId string, branchName str
 	}
 
 	log.Debugf("response status code: %d", resp.StatusCode)
-	log.Debugf("response status: %s", resp.Body)
+	log.Debugf("response body: %s", resp.Body)
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -114,11 +114,6 @@ func (tcc *Client) TriggerBuildWithParameters(buildTypeId string, branchName str
 	}).Debug("triggered Response")
 
 	return triggerBuildResponse, nil
-}
-
-// TriggerBuild triggers a build
-func (tcc *Client) TriggerBuild(buildId string, branchName string, params map[string]string) (TriggerBuildWithParametersResponse, error) {
-	return tcc.TriggerBuildWithParameters(buildId, branchName, params)
 }
 
 // WaitForBuild waits for a build to finish

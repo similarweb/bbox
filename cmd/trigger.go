@@ -33,6 +33,7 @@ var triggerCmd = &cobra.Command{
 			"buildTypeId":       buildTypeId,
 			"properties":        propertiesFlag,
 			"downloadArtifacts": downloadArtifacts,
+			"artifactsPath":     artifactsPath,
 		}).Debug("triggering Build")
 
 		triggerResponse, err := client.TriggerBuild(buildTypeId, branchName, propertiesFlag)
@@ -67,7 +68,7 @@ var triggerCmd = &cobra.Command{
 
 			if downloadArtifacts && err == nil && client.BuildHasArtifact(build.ID) {
 				log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
-				err = client.DownloadArtifacts(build.ID, buildTypeId, multiArtifactsPath)
+				err = client.DownloadArtifacts(build.ID, buildTypeId, artifactsPath)
 				if err != nil {
 					log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 				}
