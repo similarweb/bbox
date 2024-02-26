@@ -13,7 +13,6 @@ var clearQueueCmdName string = "clear-queue"
 var clearQueueCmd = &cobra.Command{
 	Use:   clearQueueCmdName,
 	Short: "Clear the TeamCity Build Queue",
-	Long:  `Clear the TeamCity Build Queue`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		teamcityClient := teamcity.NewTeamCityClient(teamcityURL, teamcityUsername, teamcityPassword)
@@ -23,7 +22,7 @@ var clearQueueCmd = &cobra.Command{
 
 		err := teamcityClient.ClearTeamCityQueue()
 		if err != nil {
-			log.Error("error triggering build: ", err)
+			log.Error("error while trying to clear build queue: ", err)
 			os.Exit(2)
 		}
 		logger.Info("clearing the TeamCity queue was successful.")
