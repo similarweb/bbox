@@ -75,11 +75,11 @@ func parseCombinations(combinations []string) ([]BuildParameters, error) {
 			return nil, fmt.Errorf("invalid combination format: %s", combo)
 		}
 
-		if isValidBuildID(parts[0]) == false {
+		if !isValidBuildID(parts[0]) {
 			return nil, fmt.Errorf("invalid buildTypeID: %s", parts[0])
 		}
 
-		if isValidBranchName(parts[1]) == false {
+		if !isValidBranchName(parts[1]) {
 			return nil, fmt.Errorf("invalid branchName: %s", parts[1])
 		}
 
@@ -89,7 +89,7 @@ func parseCombinations(combinations []string) ([]BuildParameters, error) {
 
 		downloadArtifacts, valid := isValidDownloadArtifacts(parts[2])
 
-		if valid == false {
+		if !valid {
 			return nil, fmt.Errorf("invalid downloadArtifacts boolean: %s", parts[2])
 		}
 
