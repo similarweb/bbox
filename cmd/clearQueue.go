@@ -20,7 +20,7 @@ var clearQueueCmd = &cobra.Command{
 
 		logger.Info("going to clear the TeamCity queue.")
 
-		err := teamcityClient.ClearTeamCityQueue()
+		err := teamcityClient.ClearQueue()
 		if err != nil {
 			log.Error("error while trying to clear build queue: ", err)
 			os.Exit(2)

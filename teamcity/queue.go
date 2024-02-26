@@ -8,8 +8,8 @@ import (
 	"net/http"
 )
 
-// ClearTeamCityQueue cancels all queued builds in TeamCity using the REST API.
-func (tcc *Client) ClearTeamCityQueue() error {
+// ClearQueue cancels all queued builds in TeamCity using the REST API.
+func (tcc *Client) ClearQueue() error {
 
 	reqURL := fmt.Sprintf("%s/app/rest/buildQueue", tcc.baseUrl)
 
