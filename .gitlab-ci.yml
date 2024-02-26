@@ -7,7 +7,23 @@ variables:
   GOPROXY: "https://go-registry.int.similarweb.io"
 
 stages:
+  - lint
   - release
+
+linters:
+  stage: lint
+  image: golangci/golangci-lint:v1.55.2
+  cache:
+    paths:
+      - /root/.cache/golangci-lint
+    key:
+      files:
+        - go.sum
+  script:
+    - golangci-lint run --new -v ./...
+  only:
+    - merge_requests
+  needs: []
 
 release:
   stage: release
