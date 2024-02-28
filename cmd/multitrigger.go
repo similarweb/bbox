@@ -142,9 +142,7 @@ func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBu
 
 				status = build.Status
 
-				if status != "SUCCESS" {
-					flowFailed = true
-				}
+				flowFailed = status != "SUCCESS"
 			}
 
 			resultsChan <- types.BuildResult{
