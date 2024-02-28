@@ -112,7 +112,9 @@ func (bs *BuildService) TriggerBuild(buildTypeId string, branchName string, para
 func (c *Client) TriggerBuilds(params []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string) {
 	buildFailed := false
 	resultsChan := make(chan types.BuildResult)
+
 	var wg sync.WaitGroup
+
 	for _, param := range params {
 		// Increment the WaitGroup's counter for each goroutine
 		wg.Add(1)
@@ -159,12 +161,15 @@ func (c *Client) TriggerBuilds(params []types.BuildParameters, waitForBuilds boo
 
 				if p.DownloadArtifacts && err == nil && c.Artifacts.BuildHasArtifact(build.ID) {
 					log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
+
 					err = c.Artifacts.DownloadAndUnzipArtifacts(build.ID, p.BuildTypeId, multiArtifactsPath)
 					if err != nil {
 						log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 					}
+
 					downloadedArtifacts = err == nil
 				}
+
 				status = build.Status
 
 				if status != "SUCCESS" {
@@ -207,9 +212,11 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 
 	baseDelay := 5 * time.Second // Initial delay of 5 seconds
 	maxDelay := 20 * time.Second // Maximum delay
-	var factor uint = 2          // Factor by which the delay is multiplied each attempt
+
+	var factor uint = 2 // Factor by which the delay is multiplied each attempt
 
 	var err error
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -223,6 +230,7 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 				log.Debugf("%s state is: %s", buildName, status.State)
 				return fmt.Errorf("build status is not finished")
 			}
+
 			return nil
 		},
 		retry.Attempts(0),
@@ -236,9 +244,12 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 			if time.Duration(delay.Seconds()) > time.Duration(maxDelay.Seconds()) {
 				delay = maxDelay
 			}
+
 			log.Infof("build %s has not finished yet, rechecking in %d seconds", buildName, time.Duration(delay.Seconds()))
+
 			return delay
 		}),
 	)
+
 	return status, nil
 }

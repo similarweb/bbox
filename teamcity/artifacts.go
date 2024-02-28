@@ -143,6 +143,7 @@ func (as *ArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeId s
 	artifactsZip := filepath.Join(destPath, fileID+"-artifacts.zip")
 
 	log.WithField("artifactsPath", destPath).Debug("writing Artifacts to path")
+
 	err = utils.WriteContentToFile(artifactsZip, content)
 	if err != nil {
 		log.Errorf("error writing content to file: %s", err)
@@ -160,5 +161,6 @@ func (as *ArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeId s
 		log.Errorf("error deleteing zip: %s", err)
 		return err
 	}
+
 	return nil
 }

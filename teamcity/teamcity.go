@@ -45,6 +45,7 @@ func NewTeamCityClient(baseUrl url.URL, username, password string) *Client {
 	}
 
 	newClient.initializeServices()
+
 	return newClient
 }
 
@@ -81,6 +82,7 @@ func (c *Client) NewRequestWrapper(method, urlStr string, body interface{}, opts
 		buf = &bytes.Buffer{}
 		enc := json.NewEncoder(buf)
 		enc.SetEscapeHTML(false)
+
 		err := enc.Encode(body)
 		if err != nil {
 			return nil, err
@@ -97,6 +99,7 @@ func (c *Client) NewRequestWrapper(method, urlStr string, body interface{}, opts
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
+
 	req.Header.Set("Accept", "application/json")
 
 	for _, opt := range opts {
