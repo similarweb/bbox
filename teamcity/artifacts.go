@@ -131,7 +131,7 @@ func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeID st
 }
 
 // DownloadAndUnzipArtifacts downloads all artifacts to given path and unzips them
-func (as *ArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeId string, destPath string) error {
+func (as *ArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeId, destPath string) error {
 	content, err := as.getAllBuildTypeArtifacts(buildID, buildTypeId)
 	if err != nil {
 		log.Errorf("error getting artifacts content: %s", err)
@@ -168,7 +168,7 @@ func (as *ArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeId s
 
 	err = os.Remove(artifactsZip)
 	if err != nil {
-		log.Errorf("error deleteing zip: %s", err)
+		log.Errorf("error deleting zip: %s", err)
 		return errors.Wrap(err, "error deleting zip")
 	}
 

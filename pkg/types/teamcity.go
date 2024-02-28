@@ -33,9 +33,9 @@ type BuildResult struct {
 	Error               error
 }
 
-// BuildParameters Definition to hold each combination
+// BuildParameters Definition to hold each combination.
 type BuildParameters struct {
-	BuildTypeId       string
+	BuildTypeID       string
 	BranchName        string
 	DownloadArtifacts bool
 	PropertiesFlag    map[string]string

@@ -14,7 +14,7 @@ func WriteContentToFile(filePath string, content []byte) error {
 	return os.WriteFile(filePath, content, 0o644) // 0o644: User can read/write, others can read
 }
 
-// CreateDir creates all necessary directories for the given path
+// CreateDir creates all necessary directories for the given path.
 func CreateDir(path string) error {
 	// Extract the directory path
 	dirPath := filepath.Dir(path)

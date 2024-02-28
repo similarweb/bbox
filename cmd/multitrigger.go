@@ -48,13 +48,13 @@ var multiTriggerCmd = &cobra.Command{
 }
 
 // triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group
-func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string) {
+func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string) {
 	flowFailed := false
-	resultsChan := make(chan types.BuildResult, len(params))
+	resultsChan := make(chan types.BuildResult, len(parameters))
 
 	var wg sync.WaitGroup
 
-	for _, param := range params {
+	for _, param := range parameters {
 		// Increment the WaitGroup's counter for each goroutine
 		wg.Add(1)
 
@@ -64,24 +64,27 @@ func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBu
 
 			log.WithFields(log.Fields{
 				"branchName":        p.BranchName,
-				"buildTypeId":       p.BuildTypeId,
+				"buildTypeId":       p.BuildTypeID,
 				"properties":        p.PropertiesFlag,
 				"downloadArtifacts": p.DownloadArtifacts,
 			}).Debug("triggering Build")
 
-			triggerResponse, err := c.Build.TriggerBuild(p.BuildTypeId, p.BranchName, p.PropertiesFlag)
+			triggerResponse, err := c.Build.TriggerBuild(p.BuildTypeID, p.BranchName, p.PropertiesFlag)
 
 			if err != nil {
 				log.Error("error triggering build: ", err)
+
 				flowFailed = true
+
 				resultsChan <- types.BuildResult{
-					BuildName:           p.BuildTypeId,
+					BuildName:           p.BuildTypeID,
 					WebURL:              triggerResponse.WebURL,
 					BranchName:          p.BranchName,
 					BuildStatus:         "NOT_TRIGGERED",
 					DownloadedArtifacts: false,
 					Error:               errors.Wrap(err, "error triggering build"),
 				}
+
 				return
 			}
 
@@ -100,7 +103,9 @@ func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBu
 
 				if err != nil {
 					log.Errorf("error waiting for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+
 					flowFailed = true
+
 					resultsChan <- types.BuildResult{
 						BuildName:           triggerResponse.BuildType.Name,
 						WebURL:              triggerResponse.WebURL,
@@ -121,10 +126,12 @@ func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBu
 				if p.DownloadArtifacts && err == nil && c.Artifacts.BuildHasArtifact(build.ID) {
 					log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
 
-					err = c.Artifacts.DownloadAndUnzipArtifacts(build.ID, p.BuildTypeId, multiArtifactsPath)
+					err = c.Artifacts.DownloadAndUnzipArtifacts(build.ID, p.BuildTypeID, multiArtifactsPath)
 					if err != nil {
 						log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+
 						flowFailed = true
+
 						resultsChan <- types.BuildResult{
 							BuildName:           triggerResponse.BuildType.Name,
 							WebURL:              triggerResponse.WebURL,

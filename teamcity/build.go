@@ -48,7 +48,7 @@ func (bs *BuildService) GetBuildStatus(buildID int) (types.BuildStatusResponse, 
 }
 
 // TriggerBuild triggers a build with parameters
-func (bs *BuildService) TriggerBuild(buildTypeId string, branchName string, params map[string]string) (types.TriggerBuildWithParametersResponse, error) {
+func (bs *BuildService) TriggerBuild(buildTypeId, branchName string, params map[string]string) (types.TriggerBuildWithParametersResponse, error) {
 	// Build the request payload with supplied parameters
 	properties := []map[string]string{}
 	for name, value := range params {

@@ -44,7 +44,7 @@ func ParseCombinations(combinations []string) ([]types.BuildParameters, error) {
 		}
 
 		parsed = append(parsed, types.BuildParameters{
-			BuildTypeId:       parts[0],
+			BuildTypeID:       parts[0],
 			BranchName:        parts[1],
 			DownloadArtifacts: downloadArtifacts,
 			PropertiesFlag:    properties,
