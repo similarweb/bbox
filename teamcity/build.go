@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 	"strings"
@@ -25,12 +26,12 @@ func (bs *BuildService) GetBuildStatus(buildId int) (types.BuildStatusResponse, 
 	req, err := bs.client.NewRequestWrapper("GET", getUrl, nil)
 
 	if err != nil {
-		return types.BuildStatusResponse{}, err
+		return types.BuildStatusResponse{}, errors.Wrapf(err, "error getting build status for build id: %d", buildId)
 	}
 
 	resp, err := bs.client.client.Do(req)
 	if err != nil {
-		return types.BuildStatusResponse{}, err
+		return types.BuildStatusResponse{}, errors.Wrapf(err, "error getting build status for build id: %d", buildId)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -43,7 +44,7 @@ func (bs *BuildService) GetBuildStatus(buildId int) (types.BuildStatusResponse, 
 	err = json.NewDecoder(resp.Body).Decode(bsr)
 
 	if err != nil {
-		return types.BuildStatusResponse{}, err
+		return types.BuildStatusResponse{}, errors.Wrap(err, "error reading response body")
 	}
 
 	return *bsr, nil
@@ -73,13 +74,13 @@ func (bs *BuildService) TriggerBuild(buildTypeId string, branchName string, para
 
 	if err != nil {
 		log.Errorf("error creating request: %v", err)
-		return types.TriggerBuildWithParametersResponse{}, err
+		return types.TriggerBuildWithParametersResponse{}, errors.Wrapf(err, "error creating request to trigger build")
 	}
 
 	resp, err := bs.client.client.Do(req)
 	if err != nil {
 		log.Errorf("error executing request to trigger build: %v", err)
-		return types.TriggerBuildWithParametersResponse{}, err
+		return types.TriggerBuildWithParametersResponse{}, errors.Wrapf(err, "error executing request to trigger build")
 	}
 
 	log.Debugf("response status code: %d", resp.StatusCode)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -69,7 +70,7 @@ func (c *Client) NewRequestWrapper(method, urlStr string, body interface{}, opts
 
 	u, err := c.baseUrl.Parse(urlStr)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to parse url %s", urlStr)
 	}
 
 	log.WithFields(log.Fields{
@@ -85,13 +86,13 @@ func (c *Client) NewRequestWrapper(method, urlStr string, body interface{}, opts
 
 		err := enc.Encode(body)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to encode body")
 		}
 	}
 
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to create new request")
 	}
 
 	req.SetBasicAuth(c.BasicAuth.username, c.BasicAuth.password)

@@ -14,7 +14,7 @@ var branchName = "master"
 var artifactsPath = "./"
 
 var (
-	buildTypeId         string
+	buildTypeID         string
 	propertiesFlag      map[string]string
 	downloadArtifacts   bool
 	waitForBuild        bool
@@ -37,13 +37,13 @@ var triggerCmd = &cobra.Command{
 		log.WithFields(log.Fields{
 			"teamcityURL":       teamcityURL,
 			"branchName":        branchName,
-			"buildTypeId":       buildTypeId,
+			"buildTypeID":       buildTypeID,
 			"properties":        propertiesFlag,
 			"downloadArtifacts": downloadArtifacts,
 			"artifactsPath":     artifactsPath,
 		}).Debug("triggering Build")
 
-		triggerResponse, err := client.Build.TriggerBuild(buildTypeId, branchName, propertiesFlag)
+		triggerResponse, err := client.Build.TriggerBuild(buildTypeID, branchName, propertiesFlag)
 
 		if err != nil {
 			log.Error("error triggering build: ", err)
@@ -75,7 +75,7 @@ var triggerCmd = &cobra.Command{
 
 			if downloadArtifacts && err == nil && client.Artifacts.BuildHasArtifact(build.ID) {
 				log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
-				err = client.Artifacts.DownloadAndUnzipArtifacts(build.ID, buildTypeId, artifactsPath)
+				err = client.Artifacts.DownloadAndUnzipArtifacts(build.ID, buildTypeID, artifactsPath)
 				if err != nil {
 					log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 				}
@@ -98,7 +98,7 @@ var triggerCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(triggerCmd)
 
-	triggerCmd.PersistentFlags().StringVarP(&buildTypeId, "build-type-id", "i", "", "The Build Type")
+	triggerCmd.PersistentFlags().StringVarP(&buildTypeID, "build-type-id", "i", "", "The Build Type")
 	triggerCmd.PersistentFlags().StringVar(&artifactsPath, "artifacts-path", artifactsPath, "Path to download Artifacts to")
 	triggerCmd.PersistentFlags().BoolVarP(&waitForBuild, "wait-for-build", "w", waitForBuild, "Wait for build to finish and get status")
 	triggerCmd.PersistentFlags().DurationVarP(&waitForBuildTimeout, "wait-timeout", "t", waitForBuildTimeout, "Timeout for waiting for build to finish")
