@@ -5,6 +5,7 @@ import (
 	"bbox/pkg/params"
 	"bbox/pkg/types"
 	"bbox/teamcity"
+	"github.com/pkg/errors"
 	"net/url"
 	"os"
 	"sync"
@@ -41,15 +42,15 @@ var multiTriggerCmd = &cobra.Command{
 		}
 
 		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
-		
+
 		triggerBuilds(client, allCombinations, waitForBuilds, waitTimeout, multiArtifactsPath)
 	},
 }
 
 // triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group
 func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string) {
-	buildFailed := false
-	resultsChan := make(chan types.BuildResult)
+	flowFailed := false
+	resultsChan := make(chan types.BuildResult, len(params))
 
 	var wg sync.WaitGroup
 
@@ -72,6 +73,15 @@ func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBu
 
 			if err != nil {
 				log.Error("error triggering build: ", err)
+				flowFailed = true
+				resultsChan <- types.BuildResult{
+					BuildName:           p.BuildTypeId,
+					WebURL:              triggerResponse.WebURL,
+					BranchName:          p.BranchName,
+					BuildStatus:         "NOT_TRIGGERED",
+					DownloadedArtifacts: false,
+					Error:               errors.Wrap(err, "error triggering build"),
+				}
 				return
 			}
 
@@ -90,6 +100,17 @@ func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBu
 
 				if err != nil {
 					log.Errorf("error waiting for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+					flowFailed = true
+					resultsChan <- types.BuildResult{
+						BuildName:           triggerResponse.BuildType.Name,
+						WebURL:              triggerResponse.WebURL,
+						BranchName:          p.BranchName,
+						BuildStatus:         status,
+						DownloadedArtifacts: false,
+						Error:               errors.Wrap(err, "error waiting for build"),
+					}
+
+					return
 				}
 
 				log.WithFields(log.Fields{
@@ -103,6 +124,17 @@ func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBu
 					err = c.Artifacts.DownloadAndUnzipArtifacts(build.ID, p.BuildTypeId, multiArtifactsPath)
 					if err != nil {
 						log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+						flowFailed = true
+						resultsChan <- types.BuildResult{
+							BuildName:           triggerResponse.BuildType.Name,
+							WebURL:              triggerResponse.WebURL,
+							BranchName:          p.BranchName,
+							BuildStatus:         build.Status,
+							DownloadedArtifacts: false,
+							Error:               errors.Wrap(err, "error downloading artifacts"),
+						}
+
+						return
 					}
 
 					downloadedArtifacts = err == nil
@@ -111,7 +143,7 @@ func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBu
 				status = build.Status
 
 				if status != "SUCCESS" {
-					buildFailed = true
+					flowFailed = true
 				}
 			}
 
@@ -138,8 +170,8 @@ func triggerBuilds(c *teamcity.Client, params []types.BuildParameters, waitForBu
 
 	display.ResultsTable(results)
 
-	if buildFailed {
-		log.Error("one or more builds failed, more info in links above")
+	if flowFailed {
+		log.Error("one or more builds failed, more info in table above")
 		os.Exit(2)
 	}
 }

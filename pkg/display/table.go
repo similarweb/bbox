@@ -34,8 +34,16 @@ func ResultsTable(results []types.BuildResult) {
 		if status == "SUCCESS" {
 			statusColor = tablewriter.FgHiGreenColor
 		}
+
+		err := row[4]
+		errorColor := tablewriter.FgHiRedColor
+
+		if err == "None" {
+			errorColor = tablewriter.FgWhiteColor
+		}
+
 		// color row cells
-		table.Rich(row, []tablewriter.Colors{{}, {}, {tablewriter.Bold, statusColor}, {}, {}, {}})
+		table.Rich(row, []tablewriter.Colors{{}, {}, {tablewriter.Bold, statusColor}, {}, {tablewriter.Bold, errorColor}, {}})
 	}
 
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
