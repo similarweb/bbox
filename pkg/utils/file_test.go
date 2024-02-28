@@ -1,7 +1,7 @@
 package utils_test
 
 import (
-	"bbox/utils"
+	"bbox/pkg/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"

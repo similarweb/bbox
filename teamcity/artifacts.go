@@ -1,7 +1,7 @@
 package teamcity
 
 import (
-	"bbox/utils"
+	"bbox/pkg/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,8 +30,8 @@ type ArtifactChildren struct {
 }
 
 // BuildHasArtifact returns true if the build has artifacts
-func (ac *ArtifactsService) BuildHasArtifact(buildId int) bool {
-	artifactChildren, _ := ac.GetArtifactChildren(buildId)
+func (as *ArtifactsService) BuildHasArtifact(buildId int) bool {
+	artifactChildren, _ := as.GetArtifactChildren(buildId)
 	return artifactChildren.Count > 0
 }
 
@@ -68,14 +68,14 @@ func (as *ArtifactsService) GetArtifactChildren(buildID int) (ArtifactChildren, 
 }
 
 // GetArtifactContentByPath GetArtifactContent returns the content of an artifact
-func (ac *ArtifactsService) GetArtifactContentByPath(path string) ([]byte, error) {
+func (as *ArtifactsService) GetArtifactContentByPath(path string) ([]byte, error) {
 
-	req, err := ac.client.NewRequestWrapper("GET", path, nil)
+	req, err := as.client.NewRequestWrapper("GET", path, nil)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	resp, err := ac.client.client.Do(req)
+	resp, err := as.client.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -94,15 +94,15 @@ func (ac *ArtifactsService) GetArtifactContentByPath(path string) ([]byte, error
 }
 
 // GetAllBuildTypeArtifacts returns all artifacts from a buildID and buildTypeId as a zip file
-func (ac *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeId string) ([]byte, error) {
+func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeId string) ([]byte, error) {
 	getUrl := fmt.Sprintf("downloadArtifacts.html?buildId=%d&buildTypeId=%s", buildID, buildTypeId)
-	req, err := ac.client.NewRequestWrapper("GET", getUrl, nil)
+	req, err := as.client.NewRequestWrapper("GET", getUrl, nil)
 
 	if err != nil {
 		return []byte{}, err
 	}
 
-	resp, err := ac.client.client.Do(req)
+	resp, err := as.client.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +121,8 @@ func (ac *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeId st
 }
 
 // DownloadArtifacts downloads all artifacts to given path and unzips them
-func (ac *ArtifactsService) DownloadArtifacts(buildID int, buildTypeId string, destPath string) error {
-	content, err := ac.getAllBuildTypeArtifacts(buildID, buildTypeId)
+func (as *ArtifactsService) DownloadArtifacts(buildID int, buildTypeId string, destPath string) error {
+	content, err := as.getAllBuildTypeArtifacts(buildID, buildTypeId)
 	if err != nil {
 		log.Errorf("error getting artifacts content: %s", err)
 		return err

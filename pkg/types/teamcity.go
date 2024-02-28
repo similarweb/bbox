@@ -1,0 +1,87 @@
+package types
+
+type BuildStatusResponse struct {
+	ID        int    `json:"id"`
+	Status    string `json:"status"`
+	State     string `json:"state"`
+	Artifacts struct {
+		Href string `json:"href"`
+	} `json:"artifacts"`
+	SnapshotDependencies struct {
+		Count int `json:"count"`
+		Build []struct {
+			ID                  int    `json:"id"`
+			BuildTypeID         string `json:"buildTypeId"`
+			State               string `json:"state"`
+			BranchName          string `json:"branchName"`
+			Href                string `json:"href"`
+			WebURL              string `json:"webUrl"`
+			Customized          bool   `json:"customized"`
+			MatrixConfiguration struct {
+				Enabled bool `json:"enabled"`
+			} `json:"matrixConfiguration"`
+		} `json:"build"`
+	} `json:"snapshot-dependencies"`
+}
+
+type BuildResult struct {
+	BuildName           string
+	WebURL              string
+	BranchName          string
+	BuildStatus         string
+	DownloadedArtifacts bool
+	Error               error
+}
+
+// BuildParameters Definition to hold each combination
+type BuildParameters struct {
+	BuildTypeId       string
+	BranchName        string
+	DownloadArtifacts bool
+	PropertiesFlag    map[string]string
+}
+
+type TriggerBuildWithParametersResponse struct {
+	ID          int    `json:"id"`
+	BuildTypeID string `json:"buildTypeId"`
+	State       string `json:"state"`
+	Composite   bool   `json:"composite"`
+	Href        string `json:"href"`
+	WebURL      string `json:"webUrl"`
+	BuildType   struct {
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		ProjectName string `json:"projectName"`
+		ProjectID   string `json:"projectId"`
+		Href        string `json:"href"`
+		WebURL      string `json:"webUrl"`
+	} `json:"buildType"`
+	WaitReason string `json:"waitReason"`
+	QueuedDate string `json:"queuedDate"`
+	Triggered  struct {
+		Type string `json:"type"`
+		Date string `json:"date"`
+		User struct {
+			Username string `json:"username"`
+			Name     string `json:"name"`
+			ID       int    `json:"id"`
+			Href     string `json:"href"`
+		} `json:"user"`
+	} `json:"triggered"`
+	SnapshotDependencies struct {
+		Count int `json:"count"`
+		Build []struct {
+			ID                  int    `json:"id"`
+			BuildTypeID         string `json:"buildTypeId"`
+			State               string `json:"state"`
+			BranchName          string `json:"branchName"`
+			DefaultBranch       bool   `json:"defaultBranch"`
+			Href                string `json:"href"`
+			WebURL              string `json:"webUrl"`
+			MatrixConfiguration struct {
+				Enabled bool `json:"enabled"`
+			} `json:"matrixConfiguration"`
+		} `json:"build"`
+	} `json:"snapshot-dependencies"`
+}
