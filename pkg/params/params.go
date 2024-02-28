@@ -10,12 +10,15 @@ import (
 	"strings"
 )
 
-// ParseCombinations parses the combinations from the command line and returns a slice of BuildParameters
+const combinationPartsNumber = 4
+
+// ParseCombinations parses the combinations from the command line and returns a slice of BuildParameters.
 func ParseCombinations(combinations []string) ([]types.BuildParameters, error) {
 	parsed := make([]types.BuildParameters, 0, len(combinations))
+
 	for _, combo := range combinations {
 		parts := strings.Split(combo, ";")
-		if len(parts) != 4 {
+		if len(parts) != combinationPartsNumber {
 			log.Errorf("invalid combination format: %s. expected: 'buildTypeID;branchName;downloadArtifactsBool;key1=value1&key2=value2'", combo)
 			return nil, fmt.Errorf("invalid combination format: %s", combo)
 		}
@@ -61,36 +64,29 @@ func isValidBranchName(branchName string) bool {
 	return matched
 }
 
-// isValidDownloadArtifacts checks if the downloadArtifacts string is either "true" or "false", case-insensitively.
-// Returns a boolean indicating if the value is "true" or "false" and a second boolean validity flag.
-func isValidDownloadArtifacts(downloadArtifacts string) (bool, bool) {
-	normalized := strings.ToLower(downloadArtifacts)
-	if normalized == "true" {
-		return true, true
-	} else if normalized == "false" {
-		return false, true
-	}
-
-	return false, false
-}
-
 // parseProperties parses the properties from the command line and returns a map of string to string
 func parseProperties(properties string) (map[string]string, error) {
 	propertiesMap := make(map[string]string)
+
 	for _, prop := range strings.Split(properties, "&") {
 		kv := strings.SplitN(prop, "=", 2)
 		if len(kv) != 2 {
 			return nil, fmt.Errorf("invalid property format: %s", prop)
 		}
+
 		key, value := kv[0], kv[1]
+
 		if !validateParamKey(key) {
 			return nil, fmt.Errorf("invalid property key: %s", key)
 		}
+
 		if !validateParamValue(value) {
 			return nil, fmt.Errorf("invalid property value: %s", value)
 		}
+
 		propertiesMap[key] = value
 	}
+
 	return propertiesMap, nil
 }
 

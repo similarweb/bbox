@@ -29,18 +29,18 @@ type ArtifactChildren struct {
 	} `json:"file"`
 }
 
-// BuildHasArtifact returns true if the build has artifacts
-func (as *ArtifactsService) BuildHasArtifact(buildId int) bool {
-	artifactChildren, _ := as.GetArtifactChildren(buildId)
+// BuildHasArtifact returns true if the build has artifacts.
+func (as *ArtifactsService) BuildHasArtifact(buildID int) bool {
+	artifactChildren, _ := as.GetArtifactChildren(buildID)
 	return artifactChildren.Count > 0
 }
 
-// GetArtifactChildren returns the children of an artifact if any
+// GetArtifactChildren returns the children of an artifact if any.
 func (as *ArtifactsService) GetArtifactChildren(buildID int) (ArtifactChildren, error) {
-	getUrl := fmt.Sprintf("httpAuth/app/rest/builds/id:%d/%s", buildID, "artifacts/children/")
-	log.Debug("getting build children from: ", getUrl)
+	getURL := fmt.Sprintf("httpAuth/app/rest/builds/id:%d/%s", buildID, "artifacts/children/")
+	log.Debug("getting build children from: ", getURL)
 
-	req, err := as.client.NewRequestWrapper("GET", getUrl, nil)
+	req, err := as.client.NewRequestWrapper("GET", getURL, nil)
 
 	if err != nil {
 		return ArtifactChildren{}, err
@@ -57,19 +57,24 @@ func (as *ArtifactsService) GetArtifactChildren(buildID int) (ArtifactChildren, 
 		}
 	}(resp.Body)
 
-	var artifactChildrens ArtifactChildren
-	err = json.NewDecoder(resp.Body).Decode(&artifactChildrens)
+	var artifactChildren ArtifactChildren
+	err = json.NewDecoder(resp.Body).Decode(&artifactChildren)
 
 	if err != nil {
 		return ArtifactChildren{}, errors.Wrapf(err, "error decoding response body: %s", err)
 	}
 
-	return artifactChildrens, nil
+	// close
+	err = resp.Body.Close()
+	if err != nil {
+		log.Errorf("error closing response body: %s", err)
+	}
+
+	return artifactChildren, nil
 }
 
 // GetArtifactContentByPath GetArtifactContent returns the content of an artifact
 func (as *ArtifactsService) GetArtifactContentByPath(path string) ([]byte, error) {
-
 	req, err := as.client.NewRequestWrapper("GET", path, nil)
 	if err != nil {
 		return []byte{}, err
@@ -90,13 +95,18 @@ func (as *ArtifactsService) GetArtifactContentByPath(path string) ([]byte, error
 		return nil, fmt.Errorf("statusCode: %d", resp.StatusCode)
 	}
 
+	err = resp.Body.Close()
+	if err != nil {
+		log.Errorf("error closing response body: %s", err)
+	}
+
 	return io.ReadAll(resp.Body)
 }
 
 // getAllBuildTypeArtifacts returns all artifacts from a buildID and buildTypeId as a zip file
-func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeId string) ([]byte, error) {
-	getUrl := fmt.Sprintf("downloadArtifacts.html?buildId=%d&buildTypeId=%s", buildID, buildTypeId)
-	req, err := as.client.NewRequestWrapper("GET", getUrl, nil)
+func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeID string) ([]byte, error) {
+	getURL := fmt.Sprintf("downloadArtifacts.html?buildId=%d&buildTypeId=%s", buildID, buildTypeID)
+	req, err := as.client.NewRequestWrapper("GET", getURL, nil)
 
 	if err != nil {
 		return []byte{}, err
@@ -115,6 +125,11 @@ func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeId st
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("statusCode: %d", resp.StatusCode)
+	}
+
+	err = resp.Body.Close()
+	if err != nil {
+		log.Errorf("error closing response body: %s", err)
 	}
 
 	return io.ReadAll(resp.Body)

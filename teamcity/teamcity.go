@@ -14,7 +14,7 @@ import (
 )
 
 type Client struct {
-	baseUrl   url.URL
+	baseURL   url.URL
 	client    *http.Client
 	BasicAuth *BasicAuth
 
@@ -35,9 +35,9 @@ type service struct {
 }
 
 // NewTeamCityClient creates a new TeamCity client.
-func NewTeamCityClient(baseUrl url.URL, username, password string) *Client {
+func NewTeamCityClient(baseURL url.URL, username, password string) *Client {
 	newClient := &Client{
-		baseUrl: baseUrl,
+		baseURL: baseURL,
 		BasicAuth: &BasicAuth{
 			username: username,
 			password: password,
@@ -64,11 +64,11 @@ type RequestOption func(req *http.Request)
 // This Function injects the Accept and Content-Type headers.
 // A relative URL can be provided in urlStr, in which case it is resolved relative to the BaseURL of the Client.
 func (c *Client) NewRequestWrapper(method, urlStr string, body interface{}, opts ...RequestOption) (*http.Request, error) {
-	if !strings.HasSuffix(c.baseUrl.Path, "/") {
-		return nil, fmt.Errorf("BaseURL must have a trailing slash, but %v does not", c.baseUrl)
+	if !strings.HasSuffix(c.baseURL.Path, "/") {
+		return nil, fmt.Errorf("BaseURL must have a trailing slash, but %v does not", c.baseURL)
 	}
 
-	u, err := c.baseUrl.Parse(urlStr)
+	u, err := c.baseURL.Parse(urlStr)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse url %s", urlStr)
 	}

@@ -15,12 +15,12 @@ type QueueService service
 func (qs *QueueService) ClearQueue() error {
 	req, err := qs.client.NewRequestWrapper("DELETE", "app/rest/buildQueue", nil)
 	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
+		return fmt.Errorf("error creating request: %w", err)
 	}
 
 	response, err := qs.client.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error executing request to clear the queue: %v", err)
+		return fmt.Errorf("error executing request to clear the queue: %w", err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()

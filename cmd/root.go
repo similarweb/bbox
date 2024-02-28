@@ -44,7 +44,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&teamcityPassword, "teamcity-password", "", "Teamcity password")
 	rootCmd.PersistentFlags().StringVar(&teamcityURL, "teamcity-url", teamcityURL, "Teamcity URL")
 	rootCmd.MarkFlagsRequiredTogether("teamcity-username", "teamcity-password")
-
 }
 
 func initCmd() {

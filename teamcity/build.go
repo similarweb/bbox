@@ -20,18 +20,18 @@ import (
 type BuildService service
 
 // GetBuildStatus returns the status of a build
-func (bs *BuildService) GetBuildStatus(buildId int) (types.BuildStatusResponse, error) {
-	getUrl := fmt.Sprintf("%s/id:%d", "app/rest/builds", buildId)
+func (bs *BuildService) GetBuildStatus(buildID int) (types.BuildStatusResponse, error) {
+	getURL := fmt.Sprintf("%s/id:%d", "app/rest/builds", buildID)
 
-	req, err := bs.client.NewRequestWrapper("GET", getUrl, nil)
+	req, err := bs.client.NewRequestWrapper("GET", getURL, nil)
 
 	if err != nil {
-		return types.BuildStatusResponse{}, errors.Wrapf(err, "error getting build status for build id: %d", buildId)
+		return types.BuildStatusResponse{}, errors.Wrapf(err, "error getting build status for build id: %d", buildID)
 	}
 
 	resp, err := bs.client.client.Do(req)
 	if err != nil {
-		return types.BuildStatusResponse{}, errors.Wrapf(err, "error getting build status for build id: %d", buildId)
+		return types.BuildStatusResponse{}, errors.Wrapf(err, "error getting build status for build id: %d", buildID)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -229,7 +229,7 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 				return err
 			} else if status.State != "finished" {
 				log.Debugf("%s state is: %s", buildName, status.State)
-				return fmt.Errorf("build status is not finished")
+				return errors.New("build status is not finished")
 			}
 
 			return nil
