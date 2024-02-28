@@ -15,7 +15,7 @@ var buildParamsCombinations []string
 var multiTriggerCmdName = "multi-trigger"
 var multiArtifactsPath = "./"
 var waitForBuilds = true
-var waitTimeout = 30 * time.Minute
+var waitTimeout = 15 * time.Minute
 
 type BuildResult struct {
 	BuildName           string

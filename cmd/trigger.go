@@ -18,7 +18,7 @@ var (
 	propertiesFlag      map[string]string
 	downloadArtifacts   bool
 	waitForBuild        bool
-	waitForBuildTimeout = 30 * time.Minute
+	waitForBuildTimeout = 15 * time.Minute
 )
 
 var triggerCmd = &cobra.Command{
@@ -75,7 +75,7 @@ var triggerCmd = &cobra.Command{
 
 			if downloadArtifacts && err == nil && client.Artifacts.BuildHasArtifact(build.ID) {
 				log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
-				err = client.Artifacts.DownloadArtifacts(build.ID, buildTypeId, artifactsPath)
+				err = client.Artifacts.DownloadAndUnzipArtifacts(build.ID, buildTypeId, artifactsPath)
 				if err != nil {
 					log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 				}

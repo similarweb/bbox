@@ -4,7 +4,9 @@ import (
 	"bbox/pkg/types"
 	"fmt"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -14,6 +16,7 @@ func ParseCombinations(combinations []string) ([]types.BuildParameters, error) {
 	for _, combo := range combinations {
 		parts := strings.Split(combo, ";")
 		if len(parts) != 4 {
+			log.Errorf("invalid combination format: %s. expected: 'buildTypeID;branchName;downloadArtifactsBool;key1=value1&key2=value2'", combo)
 			return nil, fmt.Errorf("invalid combination format: %s", combo)
 		}
 
@@ -25,13 +28,9 @@ func ParseCombinations(combinations []string) ([]types.BuildParameters, error) {
 			return nil, fmt.Errorf("invalid branchName: %s", parts[1])
 		}
 
-		if parts[2] != "true" && parts[2] != "false" {
-			return nil, fmt.Errorf("invalid downloadArtifacts boolean: %s", parts[2])
-		}
+		downloadArtifacts, valid := strconv.ParseBool(parts[2])
 
-		downloadArtifacts, valid := isValidDownloadArtifacts(parts[2])
-
-		if !valid {
+		if valid != nil {
 			return nil, fmt.Errorf("invalid downloadArtifacts boolean: %s", parts[2])
 		}
 

@@ -93,7 +93,7 @@ func (as *ArtifactsService) GetArtifactContentByPath(path string) ([]byte, error
 	return io.ReadAll(resp.Body)
 }
 
-// GetAllBuildTypeArtifacts returns all artifacts from a buildID and buildTypeId as a zip file
+// getAllBuildTypeArtifacts returns all artifacts from a buildID and buildTypeId as a zip file
 func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeId string) ([]byte, error) {
 	getUrl := fmt.Sprintf("downloadArtifacts.html?buildId=%d&buildTypeId=%s", buildID, buildTypeId)
 	req, err := as.client.NewRequestWrapper("GET", getUrl, nil)
@@ -120,8 +120,8 @@ func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeId st
 	return io.ReadAll(resp.Body)
 }
 
-// DownloadArtifacts downloads all artifacts to given path and unzips them
-func (as *ArtifactsService) DownloadArtifacts(buildID int, buildTypeId string, destPath string) error {
+// DownloadAndUnzipArtifacts downloads all artifacts to given path and unzips them
+func (as *ArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeId string, destPath string) error {
 	content, err := as.getAllBuildTypeArtifacts(buildID, buildTypeId)
 	if err != nil {
 		log.Errorf("error getting artifacts content: %s", err)

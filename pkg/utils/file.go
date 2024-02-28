@@ -17,7 +17,6 @@ func WriteContentToFile(filePath string, content []byte) error {
 func CreateDir(path string) error {
 	// Extract the directory path
 	dirPath := filepath.Dir(path)
-
 	// Create all directories in the path, if necessary
 	return os.MkdirAll(dirPath, os.ModePerm)
 }
@@ -40,7 +39,7 @@ func UnzipFile(zipFilePath, destDir string) error {
 				return err
 			}
 		} else {
-			if err := os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+			if err := CreateDir(fpath); err != nil {
 				return err
 			}
 
