@@ -2,11 +2,12 @@ package utils
 
 import (
 	"archive/zip"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 // WriteContentToFile writes the provided content to a file at the specified path.

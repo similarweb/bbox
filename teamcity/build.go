@@ -1,14 +1,16 @@
 package teamcity
 
 import (
-	"bbox/pkg/types"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"strings"
 	"time"
+
+	"bbox/pkg/types"
+
+	"github.com/pkg/errors"
 
 	"github.com/avast/retry-go/v4"
 	log "github.com/sirupsen/logrus"
@@ -16,12 +18,11 @@ import (
 
 type BuildService service
 
-// GetBuildStatus returns the status of a build
+// GetBuildStatus returns the status of a build.
 func (bs *BuildService) GetBuildStatus(buildID int) (types.BuildStatusResponse, error) {
 	getURL := fmt.Sprintf("%s/id:%d", "app/rest/builds", buildID)
 
 	req, err := bs.client.NewRequestWrapper("GET", getURL, nil)
-
 	if err != nil {
 		return types.BuildStatusResponse{}, errors.Wrapf(err, "error getting build status for build id: %d", buildID)
 	}
@@ -38,8 +39,8 @@ func (bs *BuildService) GetBuildStatus(buildID int) (types.BuildStatusResponse, 
 	}(resp.Body)
 
 	bsr := new(types.BuildStatusResponse)
-	err = json.NewDecoder(resp.Body).Decode(bsr)
 
+	err = json.NewDecoder(resp.Body).Decode(bsr)
 	if err != nil {
 		return types.BuildStatusResponse{}, errors.Wrap(err, "error reading response body")
 	}
@@ -47,7 +48,7 @@ func (bs *BuildService) GetBuildStatus(buildID int) (types.BuildStatusResponse, 
 	return *bsr, nil
 }
 
-// TriggerBuild triggers a build with parameters
+// TriggerBuild triggers a build with parameters.
 func (bs *BuildService) TriggerBuild(buildTypeID, branchName string, params map[string]string) (types.TriggerBuildWithParametersResponse, error) {
 	// Build the request payload with supplied parameters
 	properties := []map[string]string{}
@@ -68,7 +69,6 @@ func (bs *BuildService) TriggerBuild(buildTypeID, branchName string, params map[
 	log.Debugf("Triggering build with parameters: %v ", data)
 
 	req, err := bs.client.NewRequestWrapper("POST", "httpAuth/app/rest/buildQueue", data)
-
 	if err != nil {
 		log.Errorf("error creating request: %v", err)
 		return types.TriggerBuildWithParametersResponse{}, errors.Wrapf(err, "error creating request to trigger build")
@@ -90,8 +90,8 @@ func (bs *BuildService) TriggerBuild(buildTypeID, branchName string, params map[
 	}(resp.Body)
 
 	var triggerBuildResponse types.TriggerBuildWithParametersResponse
-	err = json.NewDecoder(resp.Body).Decode(&triggerBuildResponse)
 
+	err = json.NewDecoder(resp.Body).Decode(&triggerBuildResponse)
 	if err != nil {
 		log.Error("error reading response body:", err)
 		return types.TriggerBuildWithParametersResponse{}, nil
@@ -106,7 +106,7 @@ func (bs *BuildService) TriggerBuild(buildTypeID, branchName string, params map[
 	return triggerBuildResponse, nil
 }
 
-// WaitForBuild waits for a build to finish
+// WaitForBuild waits for a build to finish.
 func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout time.Duration) (types.BuildStatusResponse, error) {
 	var status types.BuildStatusResponse
 

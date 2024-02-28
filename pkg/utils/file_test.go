@@ -1,11 +1,12 @@
 package utils_test
 
 import (
-	"bbox/pkg/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"bbox/pkg/utils"
 
 	"github.com/stretchr/testify/assert"
 )

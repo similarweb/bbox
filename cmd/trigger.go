@@ -1,17 +1,20 @@
 package cmd
 
 import (
-	"bbox/teamcity"
 	"net/url"
 	"os"
 	"time"
+
+	"bbox/teamcity"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var branchName = "master"
-var artifactsPath = "./"
+var (
+	branchName    = "master"
+	artifactsPath = "./"
+)
 
 var (
 	buildTypeID         string
@@ -26,7 +29,6 @@ var triggerCmd = &cobra.Command{
 	Short: "Trigger a single TeamCity Build",
 	Long:  `Trigger a single TeamCity Build`,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		url, err := url.Parse(teamcityURL)
 		if err != nil {
 			log.Errorf("error parsing TeamCity URL: %s", err)
@@ -44,7 +46,6 @@ var triggerCmd = &cobra.Command{
 		}).Debug("triggering Build")
 
 		triggerResponse, err := client.Build.TriggerBuild(buildTypeID, branchName, propertiesFlag)
-
 		if err != nil {
 			log.Error("error triggering build: ", err)
 			os.Exit(2)
@@ -62,7 +63,6 @@ var triggerCmd = &cobra.Command{
 			log.Infof("waiting for build %s", triggerResponse.BuildType.Name)
 
 			build, err := client.Build.WaitForBuild(triggerResponse.BuildType.Name, triggerResponse.ID, waitForBuildTimeout)
-
 			if err != nil {
 				log.Error("error waiting for build: ", err)
 				os.Exit(2)

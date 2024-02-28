@@ -1,14 +1,16 @@
 package teamcity
 
 import (
-	"bbox/pkg/utils"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"bbox/pkg/utils"
+
+	"github.com/pkg/errors"
 
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
@@ -41,7 +43,6 @@ func (as *ArtifactsService) GetArtifactChildren(buildID int) (ArtifactChildren, 
 	log.Debug("getting build children from: ", getURL)
 
 	req, err := as.client.NewRequestWrapper("GET", getURL, nil)
-
 	if err != nil {
 		return ArtifactChildren{}, err
 	}
@@ -58,8 +59,8 @@ func (as *ArtifactsService) GetArtifactChildren(buildID int) (ArtifactChildren, 
 	}(resp.Body)
 
 	var artifactChildren ArtifactChildren
-	err = json.NewDecoder(resp.Body).Decode(&artifactChildren)
 
+	err = json.NewDecoder(resp.Body).Decode(&artifactChildren)
 	if err != nil {
 		return ArtifactChildren{}, errors.Wrapf(err, "error decoding response body: %s", err)
 	}
@@ -73,7 +74,7 @@ func (as *ArtifactsService) GetArtifactChildren(buildID int) (ArtifactChildren, 
 	return artifactChildren, nil
 }
 
-// GetArtifactContentByPath GetArtifactContent returns the content of an artifact
+// GetArtifactContentByPath GetArtifactContent returns the content of an artifact.
 func (as *ArtifactsService) GetArtifactContentByPath(path string) ([]byte, error) {
 	req, err := as.client.NewRequestWrapper("GET", path, nil)
 	if err != nil {
@@ -103,11 +104,11 @@ func (as *ArtifactsService) GetArtifactContentByPath(path string) ([]byte, error
 	return io.ReadAll(resp.Body)
 }
 
-// getAllBuildTypeArtifacts returns all artifacts from a buildID and buildTypeId as a zip file
+// getAllBuildTypeArtifacts returns all artifacts from a buildID and buildTypeId as a zip file.
 func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeID string) ([]byte, error) {
 	getURL := fmt.Sprintf("downloadArtifacts.html?buildId=%d&buildTypeId=%s", buildID, buildTypeID)
-	req, err := as.client.NewRequestWrapper("GET", getURL, nil)
 
+	req, err := as.client.NewRequestWrapper("GET", getURL, nil)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -130,7 +131,7 @@ func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeID st
 	return io.ReadAll(resp.Body)
 }
 
-// DownloadAndUnzipArtifacts downloads all artifacts to given path and unzips them
+// DownloadAndUnzipArtifacts downloads all artifacts to given path and unzips them.
 func (as *ArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeID, destPath string) error {
 	content, err := as.getAllBuildTypeArtifacts(buildID, buildTypeID)
 	if err != nil {

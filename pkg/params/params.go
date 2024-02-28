@@ -1,13 +1,15 @@
 package params
 
 import (
-	"bbox/pkg/types"
 	"fmt"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"bbox/pkg/types"
+
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const combinationPartsNumber = 4
@@ -38,7 +40,6 @@ func ParseCombinations(combinations []string) ([]types.BuildParameters, error) {
 		}
 
 		properties, err := parseProperties(parts[3])
-
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse properties: %s", parts[3])
 		}
@@ -64,7 +65,7 @@ func isValidBranchName(branchName string) bool {
 	return matched
 }
 
-// parseProperties parses the properties from the command line and returns a map of string to string
+// parseProperties parses the properties from the command line and returns a map of string to string.
 func parseProperties(properties string) (map[string]string, error) {
 	propertiesMap := make(map[string]string)
 
@@ -90,13 +91,13 @@ func parseProperties(properties string) (map[string]string, error) {
 	return propertiesMap, nil
 }
 
-// validateParamKey checks if the parameter is valid key and returns a boolean
+// validateParamKey checks if the parameter is valid key and returns a boolean.
 func validateParamKey(key string) bool {
 	matched, _ := regexp.MatchString(`^\w+[a-zA-Z0-9\\;,*/_.-]*`, key)
 	return matched
 }
 
-// validateParamValue checks if the parameter is valid value and returns a boolean
+// validateParamValue checks if the parameter is valid value and returns a boolean.
 func validateParamValue(value string) bool {
 	matched, _ := regexp.MatchString(`^[a-zA-Z0-9\\;,*/@:_.-]*$`, value)
 	return matched

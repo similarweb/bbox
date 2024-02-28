@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"bbox/teamcity"
 	"net/url"
 	"os"
+
+	"bbox/teamcity"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -15,7 +16,6 @@ var clearQueueCmd = &cobra.Command{
 	Use:   clearQueueCmdName,
 	Short: "Clear the TeamCity Build Queue",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		url, err := url.Parse(teamcityURL)
 		if err != nil {
 			log.Errorf("error parsing TeamCity URL: %s", err)

@@ -1,25 +1,28 @@
 package cmd
 
 import (
-	"bbox/pkg/display"
-	"bbox/pkg/params"
-	"bbox/pkg/types"
-	"bbox/teamcity"
-	"github.com/pkg/errors"
 	"net/url"
 	"os"
 	"sync"
 	"time"
 
+	"bbox/pkg/display"
+	"bbox/pkg/params"
+	"bbox/pkg/types"
+	"bbox/teamcity"
+	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var buildParamsCombinations []string
-var multiTriggerCmdName = "multi-trigger"
-var multiArtifactsPath = "./"
-var waitForBuilds = true
-var waitTimeout = 15 * time.Minute
+var (
+	buildParamsCombinations []string
+	multiTriggerCmdName     = "multi-trigger"
+	multiArtifactsPath      = "./"
+	waitForBuilds           = true
+	waitTimeout             = 15 * time.Minute
+)
 
 var multiTriggerCmd = &cobra.Command{
 	Use:   multiTriggerCmdName,
@@ -28,7 +31,6 @@ var multiTriggerCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Debug("multi-triggering builds, parsing possible combinations")
 		allCombinations, err := params.ParseCombinations(buildParamsCombinations)
-
 		if err != nil {
 			log.Errorf("failed to parse combinations: %v", err)
 			os.Exit(1)
@@ -70,7 +72,6 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 			}).Debug("triggering Build")
 
 			triggerResponse, err := c.Build.TriggerBuild(p.BuildTypeID, p.BranchName, p.PropertiesFlag)
-
 			if err != nil {
 				log.Error("error triggering build: ", err)
 
@@ -100,7 +101,6 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 				log.Infof("waiting for build %s", triggerResponse.BuildType.Name)
 
 				build, err := c.Build.WaitForBuild(triggerResponse.BuildType.Name, triggerResponse.ID, waitTimeout)
-
 				if err != nil {
 					log.Errorf("error waiting for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 

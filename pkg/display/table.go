@@ -1,10 +1,11 @@
 package display
 
 import (
-	"bbox/pkg/types"
-	"github.com/olekukonko/tablewriter"
 	"os"
 	"strconv"
+
+	"bbox/pkg/types"
+	"github.com/olekukonko/tablewriter"
 )
 
 func ResultsTable(results []types.BuildResult) {
