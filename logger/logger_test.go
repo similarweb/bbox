@@ -27,7 +27,7 @@ func TestInitializeLogger(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		// to ensure each goroutine gets its unique copy of the test case data:
+		// to ensure each goroutine gets its unique copy of the test case data
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel() // marks each test case as capable of running in parallel with each other
