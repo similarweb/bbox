@@ -22,7 +22,7 @@ var clearQueueCmd = &cobra.Command{
 			os.Exit(2)
 		}
 
-		client := teamcity.NewTeamCityClient(*url, teamcityUsername, teamcityPassword)
+		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
 		logger := log.WithField("teamcityURL", url.String())
 
 		logger.Info("going to clear the TeamCity queue.")

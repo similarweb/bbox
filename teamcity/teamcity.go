@@ -14,7 +14,7 @@ import (
 )
 
 type Client struct {
-	baseURL   url.URL
+	baseURL   *url.URL
 	client    *http.Client
 	BasicAuth *BasicAuth
 
@@ -35,7 +35,7 @@ type service struct {
 }
 
 // NewTeamCityClient creates a new TeamCity client.
-func NewTeamCityClient(baseURL url.URL, username, password string) *Client {
+func NewTeamCityClient(baseURL *url.URL, username, password string) *Client {
 	newClient := &Client{
 		baseURL: baseURL,
 		BasicAuth: &BasicAuth{

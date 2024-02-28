@@ -32,7 +32,7 @@ var triggerCmd = &cobra.Command{
 			log.Errorf("error parsing TeamCity URL: %s", err)
 			os.Exit(2)
 		}
-		client := teamcity.NewTeamCityClient(*url, teamcityUsername, teamcityPassword)
+		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
 
 		log.WithFields(log.Fields{
 			"teamcityURL":       teamcityURL,

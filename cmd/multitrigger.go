@@ -46,7 +46,7 @@ var multiTriggerCmd = &cobra.Command{
 			os.Exit(2)
 		}
 
-		client := teamcity.NewTeamCityClient(*url, teamcityUsername, teamcityPassword)
+		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
 		client.TriggerBuilds(allCombinations, waitForBuilds, waitTimeout, multiArtifactsPath)
 	},
 }

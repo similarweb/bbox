@@ -127,11 +127,6 @@ func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeID st
 		return nil, fmt.Errorf("statusCode: %d", resp.StatusCode)
 	}
 
-	err = resp.Body.Close()
-	if err != nil {
-		log.Errorf("error closing response body: %s", err)
-	}
-
 	return io.ReadAll(resp.Body)
 }
 
