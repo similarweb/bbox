@@ -1,33 +1,99 @@
 package teamcity
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/avast/retry-go/v4"
-	log "github.com/sirupsen/logrus"
 	"io"
-	"net/http"
 	"strings"
 	"time"
+
+	"github.com/avast/retry-go/v4"
+	log "github.com/sirupsen/logrus"
 )
 
-// GetBuildStatus returns the status of a build
-func (tcc *Client) GetBuildStatus(buildId int) (BuildStatusResponse, error) {
-	getUrl := fmt.Sprintf("%s/%s/id:%d", tcc.baseUrl, "app/rest/builds", buildId)
-	log.Debug("Getting build status from: ", getUrl)
+type BuildService service
 
-	req, err := http.NewRequest("GET", getUrl, nil)
+type BuildStatusResponse struct {
+	ID        int    `json:"id"`
+	Status    string `json:"status"`
+	State     string `json:"state"`
+	Artifacts struct {
+		Href string `json:"href"`
+	} `json:"artifacts"`
+	SnapshotDependencies struct {
+		Count int `json:"count"`
+		Build []struct {
+			ID                  int    `json:"id"`
+			BuildTypeID         string `json:"buildTypeId"`
+			State               string `json:"state"`
+			BranchName          string `json:"branchName"`
+			Href                string `json:"href"`
+			WebURL              string `json:"webUrl"`
+			Customized          bool   `json:"customized"`
+			MatrixConfiguration struct {
+				Enabled bool `json:"enabled"`
+			} `json:"matrixConfiguration"`
+		} `json:"build"`
+	} `json:"snapshot-dependencies"`
+}
+
+type TriggerBuildWithParametersResponse struct {
+	ID          int    `json:"id"`
+	BuildTypeID string `json:"buildTypeId"`
+	State       string `json:"state"`
+	Composite   bool   `json:"composite"`
+	Href        string `json:"href"`
+	WebURL      string `json:"webUrl"`
+	BuildType   struct {
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		ProjectName string `json:"projectName"`
+		ProjectID   string `json:"projectId"`
+		Href        string `json:"href"`
+		WebURL      string `json:"webUrl"`
+	} `json:"buildType"`
+	WaitReason string `json:"waitReason"`
+	QueuedDate string `json:"queuedDate"`
+	Triggered  struct {
+		Type string `json:"type"`
+		Date string `json:"date"`
+		User struct {
+			Username string `json:"username"`
+			Name     string `json:"name"`
+			ID       int    `json:"id"`
+			Href     string `json:"href"`
+		} `json:"user"`
+	} `json:"triggered"`
+	SnapshotDependencies struct {
+		Count int `json:"count"`
+		Build []struct {
+			ID                  int    `json:"id"`
+			BuildTypeID         string `json:"buildTypeId"`
+			State               string `json:"state"`
+			BranchName          string `json:"branchName"`
+			DefaultBranch       bool   `json:"defaultBranch"`
+			Href                string `json:"href"`
+			WebURL              string `json:"webUrl"`
+			MatrixConfiguration struct {
+				Enabled bool `json:"enabled"`
+			} `json:"matrixConfiguration"`
+		} `json:"build"`
+	} `json:"snapshot-dependencies"`
+}
+
+// GetBuildStatus returns the status of a build
+func (bs *BuildService) GetBuildStatus(buildId int) (BuildStatusResponse, error) {
+	getUrl := fmt.Sprintf("%s/id:%d", "app/rest/builds", buildId)
+
+	req, err := bs.client.NewRequestWrapper("GET", getUrl, nil)
 
 	if err != nil {
 		return BuildStatusResponse{}, err
 	}
-	req.SetBasicAuth(tcc.username, tcc.password)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 
-	resp, err := tcc.client.Do(req)
+	resp, err := bs.client.client.Do(req)
 	if err != nil {
 		return BuildStatusResponse{}, err
 	}
@@ -38,25 +104,25 @@ func (tcc *Client) GetBuildStatus(buildId int) (BuildStatusResponse, error) {
 		}
 	}(resp.Body)
 
-	bs := new(BuildStatusResponse)
-	err = json.NewDecoder(resp.Body).Decode(bs)
+	bsr := new(BuildStatusResponse)
+	err = json.NewDecoder(resp.Body).Decode(bsr)
 
 	if err != nil {
 		return BuildStatusResponse{}, err
 	}
 
-	return *bs, nil
+	return *bsr, nil
 }
 
 // TriggerBuild triggers a build with parameters
-func (tcc *Client) TriggerBuild(buildTypeId string, branchName string, params map[string]string) (TriggerBuildWithParametersResponse, error) {
+func (bs *BuildService) TriggerBuild(buildTypeId string, branchName string, params map[string]string) (TriggerBuildWithParametersResponse, error) {
 	// Build the request payload with supplied parameters
 	properties := []map[string]string{}
 	for name, value := range params {
 		properties = append(properties, map[string]string{"name": name, "value": value})
 	}
 
-	jsonData, err := json.Marshal(map[string]interface{}{
+	data := map[string]interface{}{
 		"branchName": branchName,
 		"buildType": map[string]string{
 			"id": buildTypeId,
@@ -64,26 +130,18 @@ func (tcc *Client) TriggerBuild(buildTypeId string, branchName string, params ma
 		"properties": map[string]interface{}{
 			"property": properties,
 		},
-	})
-
-	if err != nil {
-		return TriggerBuildWithParametersResponse{}, err
 	}
 
-	log.Debug("Triggering build with parameters: ", string(jsonData))
+	log.Debugf("Triggering build with parameters: %v ", data)
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/httpAuth/app/rest/buildQueue", tcc.baseUrl), bytes.NewBuffer(jsonData))
+	req, err := bs.client.NewRequestWrapper("POST", "httpAuth/app/rest/buildQueue", data)
 
 	if err != nil {
 		log.Errorf("error creating request: %v", err)
 		return TriggerBuildWithParametersResponse{}, err
 	}
 
-	req.SetBasicAuth(tcc.username, tcc.password) // Assuming basic auth for simplicity
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := tcc.client.Do(req)
+	resp, err := bs.client.client.Do(req)
 	if err != nil {
 		log.Errorf("error executing request to trigger build: %v", err)
 		return TriggerBuildWithParametersResponse{}, err
@@ -116,7 +174,7 @@ func (tcc *Client) TriggerBuild(buildTypeId string, branchName string, params ma
 }
 
 // WaitForBuild waits for a build to finish
-func (tcc *Client) WaitForBuild(buildName string, buildNumber int, timeout time.Duration) (BuildStatusResponse, error) {
+func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout time.Duration) (BuildStatusResponse, error) {
 	var status BuildStatusResponse
 
 	baseDelay := 5 * time.Second // Initial delay of 5 seconds
@@ -129,7 +187,7 @@ func (tcc *Client) WaitForBuild(buildName string, buildNumber int, timeout time.
 
 	err = retry.Do(
 		func() error {
-			status, err = tcc.GetBuildStatus(buildNumber)
+			status, err = bs.GetBuildStatus(buildNumber)
 			if err != nil {
 				log.Errorf("error getting build status: %s", err)
 				return err

@@ -5,37 +5,50 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 )
 
+type ArtifactsService service
+
+type ArtifactChildren struct {
+	Count int `json:"count"`
+	File  []struct {
+		Name             string `json:"name"`
+		Size             int    `json:"size"`
+		ModificationTime string `json:"modificationTime"`
+		Href             string `json:"href"`
+		Content          struct {
+			Href string `json:"href"`
+		} `json:"content"`
+	} `json:"file"`
+}
+
 // BuildHasArtifact returns true if the build has artifacts
-func (tcc *Client) BuildHasArtifact(buildId int) bool {
-	artifactChildren, _ := tcc.GetArtifactChildren(buildId)
+func (ac *ArtifactsService) BuildHasArtifact(buildId int) bool {
+	artifactChildren, _ := ac.GetArtifactChildren(buildId)
 	return artifactChildren.Count > 0
 }
 
 // GetArtifactChildren returns the children of an artifact if any
-func (tcc *Client) GetArtifactChildren(buildID int) (ArtifactChildrenResponse, error) {
-	getUrl := fmt.Sprintf("%s/httpAuth/app/rest/builds/id:%d/%s", tcc.baseUrl, buildID, "artifacts/children/")
+func (as *ArtifactsService) GetArtifactChildren(buildID int) (ArtifactChildren, error) {
+	getUrl := fmt.Sprintf("httpAuth/app/rest/builds/id:%d/%s", buildID, "artifacts/children/")
 	log.Debug("getting build children from: ", getUrl)
 
-	req, err := http.NewRequest("GET", getUrl, nil)
+	req, err := as.client.NewRequestWrapper("GET", getUrl, nil)
 
 	if err != nil {
-		return ArtifactChildrenResponse{}, err
+		return ArtifactChildren{}, err
 	}
-	req.SetBasicAuth(tcc.username, tcc.password)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 
-	resp, err := tcc.client.Do(req)
+	resp, err := as.client.client.Do(req)
 	if err != nil {
-		return ArtifactChildrenResponse{}, err
+		return ArtifactChildren{}, err
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -44,31 +57,25 @@ func (tcc *Client) GetArtifactChildren(buildID int) (ArtifactChildrenResponse, e
 		}
 	}(resp.Body)
 
-	var ArtifactChildren ArtifactChildrenResponse
-	err = json.NewDecoder(resp.Body).Decode(&ArtifactChildren)
+	var artifactChildrens ArtifactChildren
+	err = json.NewDecoder(resp.Body).Decode(&artifactChildrens)
 
 	if err != nil {
-		return ArtifactChildrenResponse{}, err
+		return ArtifactChildren{}, err
 	}
 
-	return ArtifactChildren, nil
+	return artifactChildrens, nil
 }
 
 // GetArtifactContentByPath GetArtifactContent returns the content of an artifact
-func (tcc *Client) GetArtifactContentByPath(path string) ([]byte, error) {
-	getUrl := fmt.Sprintf("%s%s", tcc.baseUrl, path)
-	log.Debug("getting artifact content from: ", getUrl)
+func (ac *ArtifactsService) GetArtifactContentByPath(path string) ([]byte, error) {
 
-	req, err := http.NewRequest("GET", getUrl, nil)
-
+	req, err := ac.client.NewRequestWrapper("GET", path, nil)
 	if err != nil {
 		return []byte{}, err
 	}
-	req.SetBasicAuth(tcc.username, tcc.password)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 
-	resp, err := tcc.client.Do(req)
+	resp, err := ac.client.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -87,21 +94,15 @@ func (tcc *Client) GetArtifactContentByPath(path string) ([]byte, error) {
 }
 
 // GetAllBuildTypeArtifacts returns all artifacts from a buildID and buildTypeId as a zip file
-func (tcc *Client) GetAllBuildTypeArtifacts(buildID int, buildTypeId string) ([]byte, error) {
-	getUrl := fmt.Sprintf("%s/downloadArtifacts.html?buildId=%d&buildTypeId=%s", tcc.baseUrl, buildID, buildTypeId)
-
-	log.Debug("Getting all artifacts from: ", getUrl)
-
-	req, err := http.NewRequest("GET", getUrl, nil)
+func (ac *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeId string) ([]byte, error) {
+	getUrl := fmt.Sprintf("downloadArtifacts.html?buildId=%d&buildTypeId=%s", buildID, buildTypeId)
+	req, err := ac.client.NewRequestWrapper("GET", getUrl, nil)
 
 	if err != nil {
 		return []byte{}, err
 	}
-	req.SetBasicAuth(tcc.username, tcc.password)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 
-	resp, err := tcc.client.Do(req)
+	resp, err := ac.client.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +121,8 @@ func (tcc *Client) GetAllBuildTypeArtifacts(buildID int, buildTypeId string) ([]
 }
 
 // DownloadArtifacts downloads all artifacts to given path and unzips them
-func (tcc *Client) DownloadArtifacts(buildID int, buildTypeId string, destPath string) error {
-	content, err := tcc.GetAllBuildTypeArtifacts(buildID, buildTypeId)
+func (ac *ArtifactsService) DownloadArtifacts(buildID int, buildTypeId string, destPath string) error {
+	content, err := ac.getAllBuildTypeArtifacts(buildID, buildTypeId)
 	if err != nil {
 		log.Errorf("error getting artifacts content: %s", err)
 		return err

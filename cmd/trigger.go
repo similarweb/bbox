@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"bbox/teamcity"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
+	"net/url"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 var branchName = "master"
@@ -25,7 +27,12 @@ var triggerCmd = &cobra.Command{
 	Long:  `Trigger a single TeamCity Build`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		client := teamcity.NewTeamCityClient(teamcityURL, teamcityUsername, teamcityPassword)
+		url, err := url.Parse(teamcityURL)
+		if err != nil {
+			log.Errorf("error parsing TeamCity URL: %s", err)
+			os.Exit(2)
+		}
+		client := teamcity.NewTeamCityClient(*url, teamcityUsername, teamcityPassword)
 
 		log.WithFields(log.Fields{
 			"teamcityURL":       teamcityURL,
@@ -36,7 +43,7 @@ var triggerCmd = &cobra.Command{
 			"artifactsPath":     artifactsPath,
 		}).Debug("triggering Build")
 
-		triggerResponse, err := client.TriggerBuild(buildTypeId, branchName, propertiesFlag)
+		triggerResponse, err := client.Build.TriggerBuild(buildTypeId, branchName, propertiesFlag)
 
 		if err != nil {
 			log.Error("error triggering build: ", err)
@@ -54,7 +61,7 @@ var triggerCmd = &cobra.Command{
 		if waitForBuilds {
 			log.Infof("waiting for build %s", triggerResponse.BuildType.Name)
 
-			build, err := client.WaitForBuild(buildTypeId, triggerResponse.ID, waitTimeout)
+			build, err := client.Build.WaitForBuild(triggerResponse.BuildType.Name, triggerResponse.ID, waitForBuildTimeout)
 
 			if err != nil {
 				log.Error("error waiting for build: ", err)
@@ -66,9 +73,9 @@ var triggerCmd = &cobra.Command{
 				"buildState":  build.State,
 			}).Infof("Build %s Finished", triggerResponse.BuildType.Name)
 
-			if downloadArtifacts && err == nil && client.BuildHasArtifact(build.ID) {
+			if downloadArtifacts && err == nil && client.Artifacts.BuildHasArtifact(build.ID) {
 				log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
-				err = client.DownloadArtifacts(build.ID, buildTypeId, artifactsPath)
+				err = client.Artifacts.DownloadArtifacts(build.ID, buildTypeId, artifactsPath)
 				if err != nil {
 					log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 				}

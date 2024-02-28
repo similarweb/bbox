@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bbox/teamcity"
+	"net/url"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -15,12 +16,18 @@ var clearQueueCmd = &cobra.Command{
 	Short: "Clear the TeamCity Build Queue",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		teamcityClient := teamcity.NewTeamCityClient(teamcityURL, teamcityUsername, teamcityPassword)
-		logger := log.WithField("teamcityURL", teamcityURL)
+		url, err := url.Parse(teamcityURL)
+		if err != nil {
+			log.Errorf("error parsing TeamCity URL: %s", err)
+			os.Exit(2)
+		}
+
+		client := teamcity.NewTeamCityClient(*url, teamcityUsername, teamcityPassword)
+		logger := log.WithField("teamcityURL", url.String())
 
 		logger.Info("going to clear the TeamCity queue.")
 
-		err := teamcityClient.ClearQueue()
+		err = client.Queue.ClearQueue()
 		if err != nil {
 			log.Error("error while trying to clear build queue: ", err)
 			os.Exit(2)

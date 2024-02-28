@@ -3,13 +3,15 @@ package cmd
 import (
 	"bbox/teamcity"
 	"fmt"
-	"github.com/pkg/errors"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/olekukonko/tablewriter"
 	log "github.com/sirupsen/logrus"
@@ -112,7 +114,13 @@ func parseCombinations(combinations []string) ([]BuildParameters, error) {
 
 // triggerBuilds triggers the builds for each set of build parameters
 func triggerBuilds(params []BuildParameters, waitForBuilds bool, waitTimeout time.Duration) {
-	client := teamcity.NewTeamCityClient(teamcityURL, teamcityUsername, teamcityPassword)
+	url, err := url.Parse(teamcityURL)
+	if err != nil {
+		log.Errorf("error parsing TeamCity URL: %s", err)
+		os.Exit(2)
+	}
+
+	client := teamcity.NewTeamCityClient(*url, teamcityUsername, teamcityPassword)
 
 	resultsChan := make(chan BuildResult)
 	var wg sync.WaitGroup
@@ -132,7 +140,8 @@ func triggerBuilds(params []BuildParameters, waitForBuilds bool, waitTimeout tim
 				"downloadArtifacts": p.downloadArtifacts,
 			}).Debug("triggering Build")
 
-			triggerResponse, err := client.TriggerBuild(p.buildTypeId, p.branchName, p.propertiesFlag)
+			//triggerResponse, err := client.TriggerBuild(p.buildTypeId, p.branchName, p.propertiesFlag)
+			triggerResponse, err := client.Build.TriggerBuild(p.buildTypeId, p.branchName, p.propertiesFlag)
 
 			if err != nil {
 				log.Error("error triggering build: ", err)
@@ -150,7 +159,7 @@ func triggerBuilds(params []BuildParameters, waitForBuilds bool, waitTimeout tim
 			if waitForBuilds {
 				log.Infof("waiting for build %s", triggerResponse.BuildType.Name)
 
-				build, err := client.WaitForBuild(triggerResponse.BuildType.Name, triggerResponse.ID, waitTimeout)
+				build, err := client.Build.WaitForBuild(triggerResponse.BuildType.Name, triggerResponse.ID, waitTimeout)
 
 				if err != nil {
 					log.Errorf("error waiting for build %s: %s", triggerResponse.BuildType.Name, err.Error())
@@ -161,9 +170,9 @@ func triggerBuilds(params []BuildParameters, waitForBuilds bool, waitTimeout tim
 					"buildState":  build.State,
 				}).Infof("build %s Finished", triggerResponse.BuildType.Name)
 
-				if p.downloadArtifacts && err == nil && client.BuildHasArtifact(build.ID) {
+				if p.downloadArtifacts && err == nil && client.Artifacts.BuildHasArtifact(build.ID) {
 					log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
-					err = client.DownloadArtifacts(build.ID, p.buildTypeId, multiArtifactsPath)
+					err = client.Artifacts.DownloadArtifacts(build.ID, p.buildTypeId, multiArtifactsPath)
 					if err != nil {
 						log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 					}

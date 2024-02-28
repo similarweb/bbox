@@ -2,30 +2,23 @@ package teamcity
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
+type QueueService service
+
 // ClearQueue cancels all queued builds in TeamCity using the REST API.
-func (tcc *Client) ClearQueue() error {
-
-	reqURL := fmt.Sprintf("%s/app/rest/buildQueue", tcc.baseUrl)
-
-	log.WithField("reqURL", reqURL).Debug("Clearing TeamCity build queue")
-
-	req, err := http.NewRequest("DELETE", reqURL, nil)
+func (qs *QueueService) ClearQueue() error {
+	req, err := qs.client.NewRequestWrapper("DELETE", "app/rest/buildQueue", nil)
 	if err != nil {
 		return fmt.Errorf("error creating request: %v", err)
 	}
 
-	req.SetBasicAuth(tcc.username, tcc.password)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	// Perform the HTTP DELETE request
-	response, err := tcc.client.Do(req)
+	response, err := qs.client.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error executing request to clear the queue: %v", err)
 	}

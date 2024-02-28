@@ -5,12 +5,13 @@ package cmd
 
 import (
 	"bbox/logger"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 var logLevel = "info"
-var teamcityURL = "https://teamcity.similarweb.io"
+var teamcityURL = "https://teamcity.similarweb.io/"
 
 var (
 	teamcityUsername string
