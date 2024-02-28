@@ -131,8 +131,8 @@ func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeID st
 }
 
 // DownloadAndUnzipArtifacts downloads all artifacts to given path and unzips them
-func (as *ArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeId, destPath string) error {
-	content, err := as.getAllBuildTypeArtifacts(buildID, buildTypeId)
+func (as *ArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeID, destPath string) error {
+	content, err := as.getAllBuildTypeArtifacts(buildID, buildTypeID)
 	if err != nil {
 		log.Errorf("error getting artifacts content: %s", err)
 		return errors.Wrap(err, "error getting artifacts content")
