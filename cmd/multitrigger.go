@@ -49,7 +49,7 @@ var multiTriggerCmd = &cobra.Command{
 	},
 }
 
-// triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group
+// triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group.
 func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string) {
 	flowFailed := false
 	resultsChan := make(chan types.BuildResult, len(parameters))

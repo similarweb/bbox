@@ -21,7 +21,7 @@ var (
 	teamcityPassword string
 )
 
-// rootCmd represents the base command  called without any subcommands
+// rootCmd represents the base command  called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "bbox",
 	Short: "bbox is a CLI tool for interacting with TeamCity and other CI/CD tools.",
