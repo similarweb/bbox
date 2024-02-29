@@ -1,0 +1,129 @@
+linters-settings:
+  errcheck:
+    disable-default-exclusions: false
+    exclude-functions:
+      - "io/ioutil.ReadFile"
+      - "(*github.com/spf13/cobra.Command).MarkFlagRequired"
+      - "(*github.com/spf13/cobra.Command).MarkPersistentFlagRequired"
+  goconst:
+    min-len: 2
+    min-occurrences: 3
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  gocyclo:
+    min-complexity: 15
+  gofmt:
+    rewrite-rules:
+      - pattern: "interface{}"
+        replacement: "any"
+  goimports:
+    local-prefixes: github.com/golangci/golangci-lint
+  gomnd:
+    # don't include the "operation" and "assign"
+    checks:
+      - argument
+      - case
+      - condition
+      - return
+    ignored-numbers:
+      - "0"
+      - "1"
+      - "2"
+      - "3"
+      - "5"
+    ignored-functions:
+      - strings.SplitN
+
+  gomoddirectives:
+    replace-allow-list:
+      - github.com/go-check/check
+      - github.com/golang/protobuf
+      - github.com/grpc-ecosystem/grpc-gateway
+      - gopkg.in/yaml.v2
+      - gopkg.in/yaml.v3
+      - k8s.io/api
+      - k8s.io/apiextensions-apiserver
+      - k8s.io/apimachinery
+      - k8s.io/apiserver
+      - k8s.io/cli-runtime
+      - k8s.io/client-go
+      - k8s.io/cloud-provider
+      - k8s.io/cluster-bootstrap
+      - k8s.io/code-generator
+      - k8s.io/component-base
+      - k8s.io/component-helpers
+      - k8s.io/controller-manager
+      - k8s.io/cri-api
+      - k8s.io/csi-translation-lib
+      - k8s.io/kube-aggregator
+      - k8s.io/kube-controller-manager
+      - k8s.io/kube-proxy
+      - k8s.io/kube-scheduler
+      - k8s.io/kubectl
+      - k8s.io/kubelet
+      - k8s.io/legacy-cloud-providers
+      - k8s.io/metrics
+      - k8s.io/mount-utils
+      - k8s.io/pod-security-admission
+      - k8s.io/sample-apiserver
+      - oras.land/oras-go
+      - github.com/chai2010/gettext-go
+  govet:
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+  errorlint:
+    asserts: false
+  misspell:
+    locale: US
+  nolintlint:
+    allow-unused: false # report any unused nolint directives
+    require-explanation: false # don't require an explanation for nolint directives
+    require-specific: false # don't require nolint directives to be specific about which linter is being skipped
+  revive:
+    rules:
+      - name: unexported-return
+        disabled: true
+      - name: unused-parameter
+      - name: unhandled-error
+        arguments:
+          - "os.(Create|WriteFile|Chmod)"
+          - "fmt.Print"
+
+linters:
+  presets:
+    - bugs
+    - comment
+    - complexity
+    - error
+    - format
+    - import
+    - metalinter
+    - module
+    - performance
+    - sql
+    - style
+    - test
+    - unused
+  disable:
+    - varnamelen
+    - gochecknoglobals
+    - nlreturn
+    - goerr113
+    - exhaustruct
+    - depguard
+    - funlen
+    - lll
+
+run:
+  go: "1.20"
+  timeout: 5m

@@ -8,11 +8,13 @@ import (
 
 func InitializeLogger(level string) {
 	level = strings.ToLower(level)
+
 	logrus.SetFormatter(&logrus.TextFormatter{
 		ForceColors:            true,
 		DisableLevelTruncation: false,
 		FullTimestamp:          true,
 	})
+
 	switch level {
 	case "debug":
 		logrus.SetLevel(logrus.DebugLevel)

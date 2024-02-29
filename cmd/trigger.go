@@ -1,79 +1,108 @@
 package cmd
 
 import (
-	"bbox/teamcity"
-	"bbox/utils"
+	"net/url"
 	"os"
+	"time"
+
+	"bbox/teamcity"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var branchName string = "master"
-var triggerCmdName string = "trigger"
-var artifactsFile string = "./artifacts.zip"
+var (
+	branchName    = "master"
+	artifactsPath = "./"
+)
 
 var (
-	buildTypeId       string
-	propertiesFlag    map[string]string
-	downLoadArtifacts bool
+	buildTypeID         string
+	propertiesFlag      map[string]string
+	downloadArtifacts   bool
+	waitForBuild        bool
+	waitForBuildTimeout = 15 * time.Minute
 )
 
 var triggerCmd = &cobra.Command{
-	Use:   triggerCmdName,
+	Use:   "trigger",
 	Short: "Trigger a single TeamCity Build",
 	Long:  `Trigger a single TeamCity Build`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		teamcityClient := teamcity.NewTeamCityClient(teamcityURL, teamcityUsername, teamcityPassword)
-
-		logger := log.WithFields(log.Fields{
-			"teamcityURL": teamcityURL,
-			"branchName":  branchName,
-			"buildTypeId": buildTypeId})
-
-		logger.Info("Triggering Build")
-
-		build, err := teamcityClient.TriggerAndWaitForBuild(buildTypeId, branchName, propertiesFlag)
+		url, err := url.Parse(TeamcityURL)
 		if err != nil {
-			log.Error("Error triggering build: ", err)
+			log.Errorf("error parsing TeamCity URL: %s", err)
+			os.Exit(2)
+		}
+		client := teamcity.NewTeamCityClient(url, TeamcityUsername, TeamcityPassword)
+
+		log.WithFields(log.Fields{
+			"TeamcityURL":       TeamcityURL,
+			"branchName":        branchName,
+			"buildTypeID":       buildTypeID,
+			"properties":        propertiesFlag,
+			"downloadArtifacts": downloadArtifacts,
+			"artifactsPath":     artifactsPath,
+		}).Debug("triggering Build")
+
+		triggerResponse, err := client.Build.TriggerBuild(buildTypeID, branchName, propertiesFlag)
+		if err != nil {
+			log.Error("error triggering build: ", err)
 			os.Exit(2)
 		}
 
-		logger.WithFields(log.Fields{
-			"buildStatus": build.Status,
-			"buildState":  build.State,
-			"buildID":     build.ID,
-		}).Info("Build Finished")
+		log.WithFields(log.Fields{
+			"buildName": triggerResponse.BuildType.Name,
+			"webURL":    triggerResponse.WebURL,
+		}).Info("build Triggered")
 
-		if downLoadArtifacts {
-			logger.Info("Downloading Artifacts")
+		downloadedArtifacts := false
+		status := "UNKNOWN"
 
-			content, err := teamcityClient.GetAllBuildTypeArtifacts(build.ID, buildTypeId)
+		if waitForBuild {
+			log.Infof("waiting for build %s", triggerResponse.BuildType.Name)
+
+			build, err := client.Build.WaitForBuild(triggerResponse.BuildType.Name, triggerResponse.ID, waitForBuildTimeout)
 			if err != nil {
-				log.Errorf("Error getting artifacts content: %s", err)
+				log.Error("error waiting for build: ", err)
 				os.Exit(2)
 			}
 
-			logger.WithField("artifactsPath", artifactsFile).Info("Writing Artifacts to file")
-			err = utils.WriteContentToFile(artifactsFile, content)
-			if err != nil {
-				log.Errorf("Error writing content to file: %s", err)
-				os.Exit(2)
+			log.WithFields(log.Fields{
+				"buildStatus": build.Status,
+				"buildState":  build.State,
+			}).Infof("Build %s Finished", triggerResponse.BuildType.Name)
 
+			if downloadArtifacts && err == nil && client.Artifacts.BuildHasArtifact(build.ID) {
+				log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
+				err = client.Artifacts.DownloadAndUnzipArtifacts(build.ID, buildTypeID, artifactsPath)
+				if err != nil {
+					log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+				}
+				downloadedArtifacts = err == nil
 			}
+
+			status = build.Status
 		}
+		log.WithFields(log.Fields{
+			"BuildName":           triggerResponse.BuildType.Name,
+			"WebURL":              triggerResponse.BuildType.WebURL,
+			"BranchName":          branchName,
+			"BuildStatus":         status,
+			"DownloadedArtifacts": downloadedArtifacts,
+			"Error":               err,
+		}).Info("Done triggering build")
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(triggerCmd)
+	RootCmd.AddCommand(triggerCmd)
 
-	// Register the flags for Trigger command
-	triggerCmd.PersistentFlags().StringVarP(&buildTypeId, "build-type-id", "i", "", "The Build Type")
-	triggerCmd.PersistentFlags().BoolVar(&downLoadArtifacts, "download-artifacts", false, "Download Artifacts")
-	triggerCmd.PersistentFlags().StringVar(&artifactsFile, "artifacts-file", artifactsFile, "Path & name for downloaded Artifacts file")
-	triggerCmd.MarkFlagsRequiredTogether("download-artifacts", "artifacts-file")
+	triggerCmd.PersistentFlags().StringVarP(&buildTypeID, "build-type-id", "i", "", "The Build Type")
+	triggerCmd.PersistentFlags().StringVar(&artifactsPath, "artifacts-path", artifactsPath, "Path to download Artifacts to")
+	triggerCmd.PersistentFlags().BoolVarP(&waitForBuild, "wait-for-build", "w", waitForBuild, "Wait for build to finish and get status")
+	triggerCmd.PersistentFlags().DurationVarP(&waitForBuildTimeout, "wait-timeout", "t", waitForBuildTimeout, "Timeout for waiting for build to finish")
+	triggerCmd.PersistentFlags().BoolVarP(&downloadArtifacts, "download-artifacts", "d", downloadArtifacts, "Download Artifacts")
 	triggerCmd.PersistentFlags().StringVarP(&branchName, "branch-name", "b", branchName, "The Branch Name")
 	triggerCmd.PersistentFlags().StringToStringVarP(&propertiesFlag, "properties", "p", nil, "The properties in key=value format")
 }
