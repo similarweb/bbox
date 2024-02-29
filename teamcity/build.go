@@ -139,7 +139,7 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 			return strings.Contains(err.Error(), "build status is not finished")
 		}),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
-			delay := baseDelay * time.Duration(n*factor)
+			delay := baseDelay * time.Duration((n+1)*factor)
 			if time.Duration(delay.Seconds()) > time.Duration(maxDelay.Seconds()) {
 				delay = maxDelay
 			}

@@ -1,7 +1,6 @@
 package multitrigger
 
 import (
-	"bbox/pkg/params"
 	"bbox/teamcity"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -26,7 +25,7 @@ var Cmd = &cobra.Command{
 	Long:  `"Multi-trigger a TeamCity Build",`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Debug("multi-triggering builds, parsing possible combinations")
-		allCombinations, err := params.ParseCombinations(buildParamsCombinations)
+		allCombinations, err := parseCombinations(buildParamsCombinations)
 		if err != nil {
 			log.Errorf("failed to parse combinations: %v", err)
 			os.Exit(1)
