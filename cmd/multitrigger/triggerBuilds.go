@@ -133,18 +133,14 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 		results = append(results, result)
 	}
 
-	// work group to print the table and wait for it to finish, so it won't be interrupted with other logs
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-		resultsTable(results)
-	}()
-
-	wg.Wait()
-
+	// we need to do this to ensure that the results are printed in the same order as the parameters
 	if flowFailed {
 		log.Error("one or more builds failed, more info in table above")
+	}
+
+	resultsTable(results)
+
+	if flowFailed {
 		os.Exit(2)
 	}
 
