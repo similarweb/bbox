@@ -1,8 +1,8 @@
 package version
 
 // Set with LDFLAGS.
-var version = "unset"
+var version = "unset-dev"
 
-func Version() string {
+func GetVersion() string {
 	return version
 }

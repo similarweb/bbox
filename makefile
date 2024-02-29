@@ -1,3 +1,4 @@
+NAME ?= bbox
 PROJECT ?= gitlab.similarweb.io/infrastructure/bbox
 UNFORMATTED_FILES=$(shell find . -not -path "./vendor/*" -name "*.go" | xargs gofmt -s -l)
 GOCMD=go
@@ -11,6 +12,11 @@ release: ## Release locally all version
 
 test:  ## Run tests for the project
 		$(GOTEST) -short -race -cover -failfast ./...
+
+.PHONY: build
+build-binary: prompt-version ## Build Locally
+	@echo "Building locally $(VERSION)..."
+	$(GOBUILD) -ldflags="-X $(NAME)/version.version=$(VERSION)" -o $(NAME)_dev
 
 fmt: ## Format Go code
 	@gofmt -w -s main.go $(UNFORMATTED_FILES)
@@ -32,3 +38,7 @@ fmt-check: ## Check go code formatting
 help: ## Show Help menu
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
+
+.PHONY: prompt-version
+prompt-version:
+	$(eval VERSION := $(shell read -p "Enter a version number: " version && echo $$version))
