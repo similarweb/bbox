@@ -11,7 +11,7 @@ import (
 func resultsTable(results []types.BuildResult) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetRowLine(true)
-	table.SetHeader([]string{"Build Name", "Branch Name", "Status", "Artifacts Downloaded", "Error", "Web URL"})
+	table.SetHeader([]string{"Build Name", "Branch Name", "Build Status", "Artifacts Downloaded", "Error", "Web URL"})
 	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor}, tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor}, tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor}, tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor}, tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor}, tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiCyanColor})
 	table.SetBorders(tablewriter.Border{Left: false, Top: true, Right: false, Bottom: true})
 

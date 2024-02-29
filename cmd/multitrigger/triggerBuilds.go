@@ -109,9 +109,9 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 				}
 
 				status = build.Status
-
-				flowFailed = status != "SUCCESS"
 			}
+			// mark flow as failed if we had a build failure or error
+			flowFailed = flowFailed || (status != "SUCCESS")
 
 			resultsChan <- types.BuildResult{
 				BuildName:           triggerResponse.BuildType.Name,
@@ -124,10 +124,8 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 		}(param)
 	}
 
-	go func() {
-		wg.Wait()
-		close(resultsChan)
-	}()
+	wg.Wait()
+	close(resultsChan)
 
 	var results []types.BuildResult
 	for result := range resultsChan {
@@ -137,7 +135,9 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 	resultsTable(results)
 
 	if flowFailed {
-		log.Error("one or more builds failed, more info in table above")
+		log.Error("one or more builds failed, more info in table")
 		os.Exit(2)
 	}
+
+	log.Debugf("all builds finished successfully")
 }
