@@ -16,14 +16,14 @@ var clearQueueCmd = &cobra.Command{
 	Use:   clearQueueCmdName,
 	Short: "Clear the TeamCity Build Queue",
 	Run: func(cmd *cobra.Command, args []string) {
-		url, err := url.Parse(teamcityURL)
+		url, err := url.Parse(TeamcityURL)
 		if err != nil {
 			log.Errorf("error parsing TeamCity URL: %s", err)
 			os.Exit(2)
 		}
 
-		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
-		logger := log.WithField("teamcityURL", url.String())
+		client := teamcity.NewTeamCityClient(url, TeamcityUsername, TeamcityPassword)
+		logger := log.WithField("TeamcityURL", url.String())
 
 		logger.Info("going to clear the TeamCity queue.")
 
@@ -37,5 +37,5 @@ var clearQueueCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(clearQueueCmd)
+	RootCmd.AddCommand(clearQueueCmd)
 }

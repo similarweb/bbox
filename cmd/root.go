@@ -13,25 +13,25 @@ import (
 
 var (
 	logLevel    = "info"
-	teamcityURL = "https://teamcity.similarweb.io/"
+	TeamcityURL = "https://teamcity.similarweb.io/"
 )
 
 var (
-	teamcityUsername string
-	teamcityPassword string
+	TeamcityUsername string
+	TeamcityPassword string
 )
 
-// rootCmd represents the base command  called without any subcommands.
-var rootCmd = &cobra.Command{
+// RootCmd represents the base command  called without any subcommands.
+var RootCmd = &cobra.Command{
 	Use:   "bbox",
 	Short: "bbox is a CLI tool for interacting with TeamCity and other CI/CD tools.",
 	Long:  `bbox is a CLI tool for interacting with TeamCity and other CI/CD tools.`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// This is called by main.main(). It only needs to happen once to the RootCmd.
 func Execute() {
-	err := rootCmd.Execute()
+	err := RootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
@@ -39,14 +39,14 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initCmd)
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", logLevel, "Log level (debug, info, warn, error, fatal, panic)")
+	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	RootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", logLevel, "Log level (debug, info, warn, error, fatal, panic)")
 
 	// TeamCity authentication
-	rootCmd.PersistentFlags().StringVar(&teamcityUsername, "teamcity-username", "", "Teamcity username")
-	rootCmd.PersistentFlags().StringVar(&teamcityPassword, "teamcity-password", "", "Teamcity password")
-	rootCmd.PersistentFlags().StringVar(&teamcityURL, "teamcity-url", teamcityURL, "Teamcity URL")
-	rootCmd.MarkFlagsRequiredTogether("teamcity-username", "teamcity-password")
+	RootCmd.PersistentFlags().StringVar(&TeamcityUsername, "teamcity-username", "", "Teamcity username")
+	RootCmd.PersistentFlags().StringVar(&TeamcityPassword, "teamcity-password", "", "Teamcity password")
+	RootCmd.PersistentFlags().StringVar(&TeamcityURL, "teamcity-url", TeamcityURL, "Teamcity URL")
+	RootCmd.MarkFlagsRequiredTogether("teamcity-username", "teamcity-password")
 }
 
 func initCmd() {

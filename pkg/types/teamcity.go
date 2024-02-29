@@ -85,3 +85,16 @@ type TriggerBuildWithParametersResponse struct {
 		} `json:"build"`
 	} `json:"snapshot-dependencies"`
 }
+
+type ArtifactChildren struct {
+	Count int `json:"count"`
+	File  []struct {
+		Name             string `json:"name"`
+		Size             int    `json:"size"`
+		ModificationTime string `json:"modificationTime"`
+		Href             string `json:"href"`
+		Content          struct {
+			Href string `json:"href"`
+		} `json:"content"`
+	} `json:"file"`
+}

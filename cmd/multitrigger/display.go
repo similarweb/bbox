@@ -1,4 +1,4 @@
-package display
+package multitrigger
 
 import (
 	"os"
@@ -8,7 +8,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-func ResultsTable(results []types.BuildResult) {
+func resultsTable(results []types.BuildResult) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetRowLine(true)
 	table.SetHeader([]string{"Build Name", "Branch Name", "Status", "Artifacts Downloaded", "Error", "Web URL"})

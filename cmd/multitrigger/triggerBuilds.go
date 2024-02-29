@@ -1,53 +1,14 @@
-package cmd
+package multitrigger
 
 import (
-	"net/url"
-	"os"
-	"sync"
-	"time"
-
-	"bbox/pkg/display"
-	"bbox/pkg/params"
 	"bbox/pkg/types"
 	"bbox/teamcity"
 	"github.com/pkg/errors"
-
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
+	"os"
+	"sync"
+	"time"
 )
-
-var (
-	buildParamsCombinations []string
-	multiTriggerCmdName     = "multi-trigger"
-	multiArtifactsPath      = "./"
-	waitForBuilds           = true
-	waitTimeout             = 15 * time.Minute
-)
-
-var multiTriggerCmd = &cobra.Command{
-	Use:   multiTriggerCmdName,
-	Short: "Multi-trigger a TeamCity Build",
-	Long:  `"Multi-trigger a TeamCity Build",`,
-	Run: func(cmd *cobra.Command, args []string) {
-		log.Debug("multi-triggering builds, parsing possible combinations")
-		allCombinations, err := params.ParseCombinations(buildParamsCombinations)
-		if err != nil {
-			log.Errorf("failed to parse combinations: %v", err)
-			os.Exit(1)
-		}
-		log.WithField("combinations", allCombinations).Debug("Here are the possible combinations")
-
-		url, err := url.Parse(teamcityURL)
-		if err != nil {
-			log.Errorf("error parsing TeamCity URL: %s", err)
-			os.Exit(2)
-		}
-
-		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
-
-		triggerBuilds(client, allCombinations, waitForBuilds, waitTimeout, multiArtifactsPath)
-	},
-}
 
 // triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group.
 func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string) {
@@ -173,20 +134,10 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 		results = append(results, result)
 	}
 
-	display.ResultsTable(results)
+	resultsTable(results)
 
 	if flowFailed {
 		log.Error("one or more builds failed, more info in table above")
 		os.Exit(2)
 	}
-}
-
-func init() {
-	rootCmd.AddCommand(multiTriggerCmd)
-
-	// Register the flags for Trigger command
-	multiTriggerCmd.PersistentFlags().StringSliceVarP(&buildParamsCombinations, "build-params-combination", "c", []string{}, "Combinations as 'buildTypeID;branchName;downloadArtifactsBool;key1=value1&key2=value2' format. Repeatable. example: 'byBuildId;master;true;key=value&key2=value2'")
-	multiTriggerCmd.PersistentFlags().StringVar(&multiArtifactsPath, "artifacts-path", multiArtifactsPath, "Path to download Artifacts to")
-	multiTriggerCmd.PersistentFlags().BoolVarP(&waitForBuilds, "wait-for-builds", "w", waitForBuilds, "Wait for builds to finish and get status")
-	multiTriggerCmd.PersistentFlags().DurationVarP(&waitTimeout, "wait-timeout", "t", waitTimeout, "Timeout for waiting for builds to finish")
 }

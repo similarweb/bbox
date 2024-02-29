@@ -1,6 +1,7 @@
 package teamcity
 
 import (
+	"bbox/pkg/types"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,19 +19,6 @@ import (
 
 type ArtifactsService service
 
-type ArtifactChildren struct {
-	Count int `json:"count"`
-	File  []struct {
-		Name             string `json:"name"`
-		Size             int    `json:"size"`
-		ModificationTime string `json:"modificationTime"`
-		Href             string `json:"href"`
-		Content          struct {
-			Href string `json:"href"`
-		} `json:"content"`
-	} `json:"file"`
-}
-
 // BuildHasArtifact returns true if the build has artifacts.
 func (as *ArtifactsService) BuildHasArtifact(buildID int) bool {
 	artifactChildren, _ := as.GetArtifactChildren(buildID)
@@ -38,18 +26,18 @@ func (as *ArtifactsService) BuildHasArtifact(buildID int) bool {
 }
 
 // GetArtifactChildren returns the children of an artifact if any.
-func (as *ArtifactsService) GetArtifactChildren(buildID int) (ArtifactChildren, error) {
+func (as *ArtifactsService) GetArtifactChildren(buildID int) (types.ArtifactChildren, error) {
 	getURL := fmt.Sprintf("httpAuth/app/rest/builds/id:%d/%s", buildID, "artifacts/children/")
 	log.Debug("getting build children from: ", getURL)
 
 	req, err := as.client.NewRequestWrapper("GET", getURL, nil)
 	if err != nil {
-		return ArtifactChildren{}, err
+		return types.ArtifactChildren{}, err
 	}
 
 	resp, err := as.client.client.Do(req)
 	if err != nil {
-		return ArtifactChildren{}, errors.Wrap(err, "error getting artifact children")
+		return types.ArtifactChildren{}, errors.Wrap(err, "error getting artifact children")
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -58,11 +46,11 @@ func (as *ArtifactsService) GetArtifactChildren(buildID int) (ArtifactChildren, 
 		}
 	}(resp.Body)
 
-	var artifactChildren ArtifactChildren
+	var artifactChildren types.ArtifactChildren
 
 	err = json.NewDecoder(resp.Body).Decode(&artifactChildren)
 	if err != nil {
-		return ArtifactChildren{}, errors.Wrapf(err, "error decoding response body: %s", err)
+		return types.ArtifactChildren{}, errors.Wrapf(err, "error decoding response body: %s", err)
 	}
 
 	// close

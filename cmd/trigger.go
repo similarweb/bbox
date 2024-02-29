@@ -29,15 +29,15 @@ var triggerCmd = &cobra.Command{
 	Short: "Trigger a single TeamCity Build",
 	Long:  `Trigger a single TeamCity Build`,
 	Run: func(cmd *cobra.Command, args []string) {
-		url, err := url.Parse(teamcityURL)
+		url, err := url.Parse(TeamcityURL)
 		if err != nil {
 			log.Errorf("error parsing TeamCity URL: %s", err)
 			os.Exit(2)
 		}
-		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
+		client := teamcity.NewTeamCityClient(url, TeamcityUsername, TeamcityPassword)
 
 		log.WithFields(log.Fields{
-			"teamcityURL":       teamcityURL,
+			"TeamcityURL":       TeamcityURL,
 			"branchName":        branchName,
 			"buildTypeID":       buildTypeID,
 			"properties":        propertiesFlag,
@@ -59,7 +59,7 @@ var triggerCmd = &cobra.Command{
 		downloadedArtifacts := false
 		status := "UNKNOWN"
 
-		if waitForBuilds {
+		if waitForBuild {
 			log.Infof("waiting for build %s", triggerResponse.BuildType.Name)
 
 			build, err := client.Build.WaitForBuild(triggerResponse.BuildType.Name, triggerResponse.ID, waitForBuildTimeout)
@@ -96,7 +96,7 @@ var triggerCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(triggerCmd)
+	RootCmd.AddCommand(triggerCmd)
 
 	triggerCmd.PersistentFlags().StringVarP(&buildTypeID, "build-type-id", "i", "", "The Build Type")
 	triggerCmd.PersistentFlags().StringVar(&artifactsPath, "artifacts-path", artifactsPath, "Path to download Artifacts to")
