@@ -125,20 +125,28 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 		}(param)
 	}
 
-	go func() {
-		wg.Wait()
-		close(resultsChan)
-	}()
+	wg.Wait()
+	close(resultsChan)
 
 	var results []types.BuildResult
 	for result := range resultsChan {
 		results = append(results, result)
 	}
 
-	resultsTable(results)
+	// work group to print the table and wait for it to finish, so it won't be interrupted with other logs
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		resultsTable(results)
+	}()
+
+	wg.Wait()
 
 	if flowFailed {
 		log.Error("one or more builds failed, more info in table above")
 		os.Exit(2)
 	}
+
+	log.Debugf("all builds finished successfully")
 }
