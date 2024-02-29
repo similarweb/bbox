@@ -135,7 +135,7 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 
 	// we need to do this to ensure that the results are printed in the same order as the parameters
 	if flowFailed {
-		log.Error("one or more builds failed, more info in table above")
+		log.Error("one or more builds failed, more info in table below\n\n")
 	}
 
 	resultsTable(results)
