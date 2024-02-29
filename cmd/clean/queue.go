@@ -40,5 +40,5 @@ var queueCmd = &cobra.Command{
 }
 
 func init() {
-	CleanCmd.AddCommand(queueCmd)
+	Cmd.AddCommand(queueCmd)
 }

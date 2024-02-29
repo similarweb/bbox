@@ -6,7 +6,7 @@ import (
 
 var clearCmdName string = "clean"
 
-var CleanCmd = &cobra.Command{
+var Cmd = &cobra.Command{
 	Use:   clearCmdName,
 	Short: "Clean an unused or unwanted resources",
 	Run: func(cmd *cobra.Command, args []string) {
