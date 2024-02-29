@@ -1,4 +1,4 @@
-package teamcity
+package types
 
 type BuildStatusResponse struct {
 	ID        int    `json:"id"`
@@ -22,6 +22,23 @@ type BuildStatusResponse struct {
 			} `json:"matrixConfiguration"`
 		} `json:"build"`
 	} `json:"snapshot-dependencies"`
+}
+
+type BuildResult struct {
+	BuildName           string
+	WebURL              string
+	BranchName          string
+	BuildStatus         string
+	DownloadedArtifacts bool
+	Error               error
+}
+
+// BuildParameters Definition to hold each combination.
+type BuildParameters struct {
+	BuildTypeID       string
+	BranchName        string
+	DownloadArtifacts bool
+	PropertiesFlag    map[string]string
 }
 
 type TriggerBuildWithParametersResponse struct {
@@ -69,7 +86,7 @@ type TriggerBuildWithParametersResponse struct {
 	} `json:"snapshot-dependencies"`
 }
 
-type ArtifactChildrenResponse struct {
+type ArtifactChildren struct {
 	Count int `json:"count"`
 	File  []struct {
 		Name             string `json:"name"`
