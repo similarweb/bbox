@@ -109,9 +109,9 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 				}
 
 				status = build.Status
-
-				flowFailed = status != "SUCCESS"
 			}
+
+			flowFailed = status != "SUCCESS"
 
 			resultsChan <- types.BuildResult{
 				BuildName:           triggerResponse.BuildType.Name,
