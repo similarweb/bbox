@@ -133,7 +133,6 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 
 			return nil
 		},
-		retry.Attempts(0),
 		retry.Context(ctx),
 		// retry only if build is not finished yet, exit for another error
 		retry.RetryIf(func(err error) bool {

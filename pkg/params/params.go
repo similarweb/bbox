@@ -55,11 +55,13 @@ func ParseCombinations(combinations []string) ([]types.BuildParameters, error) {
 	return parsed, nil
 }
 
+// isValidBuildID checks if the buildID is valid and returns a boolean. The buildID can contain letters, numbers, hyphens, and underscores.
 func isValidBuildID(buildID string) bool {
 	matched, _ := regexp.MatchString("^[a-zA-Z0-9-_]+$", buildID)
 	return matched
 }
 
+// isValidBranchName checks if the branchName is valid and returns a boolean.
 func isValidBranchName(branchName string) bool {
 	matched, _ := regexp.MatchString("^[^ ~^:\\\\?*[\\]@{}/][^ ~^:\\\\?*[\\]@{}]*$", branchName)
 	return matched
