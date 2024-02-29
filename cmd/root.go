@@ -50,7 +50,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&TeamcityURL, "teamcity-url", TeamcityURL, "Teamcity URL")
 	RootCmd.MarkFlagsRequiredTogether("teamcity-username", "teamcity-password")
 	RootCmd.AddCommand(clean.CleanCmd)
-	RootCmd.AddCommand(multitrigger.MultiTriggerCmd)
+	RootCmd.AddCommand(multitrigger.Cmd)
 }
 
 func initCmd() {
