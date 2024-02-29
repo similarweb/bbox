@@ -111,7 +111,8 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 				status = build.Status
 			}
 
-			flowFailed = status != "SUCCESS"
+			// mark flow as failed if we had a build failure or and error
+			flowFailed = flowFailed || (status != "SUCCESS")
 
 			resultsChan <- types.BuildResult{
 				BuildName:           triggerResponse.BuildType.Name,
