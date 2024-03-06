@@ -84,7 +84,7 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 					"buildState":  build.State,
 				}).Infof("build %s Finished", triggerResponse.BuildType.Name)
 
-				if p.DownloadArtifacts && err == nil && c.Artifacts.BuildHasArtifact(build.ID) {
+				if p.DownloadArtifacts && c.Artifacts.BuildHasArtifact(build.ID) {
 					log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
 
 					err = c.Artifacts.DownloadAndUnzipArtifacts(build.ID, p.BuildTypeID, multiArtifactsPath)

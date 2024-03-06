@@ -21,8 +21,14 @@ type ArtifactsService service
 
 // BuildHasArtifact returns true if the build has artifacts.
 func (as *ArtifactsService) BuildHasArtifact(buildID int) bool {
-	artifactChildren, _ := as.GetArtifactChildren(buildID)
-	return artifactChildren.Count > 0
+	artifactChildren, err := as.GetArtifactChildren(buildID)
+	if err != nil {
+		log.Errorf("error getting artifact children: %s", err)
+		return false
+	}
+	hasArtifacts := artifactChildren.Count > 0
+	log.Debugf("buildID: %d has artifacts: %t", buildID, hasArtifacts)
+	return hasArtifacts
 }
 
 // GetArtifactChildren returns the children of an artifact if any.
