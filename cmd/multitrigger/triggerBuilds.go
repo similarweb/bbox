@@ -82,7 +82,7 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 				log.WithFields(log.Fields{
 					"buildStatus": build.Status,
 					"buildState":  build.State,
-				}).Infof("build %s Finished", triggerResponse.BuildType.Name)
+				}).Infof("build %s finished", triggerResponse.BuildType.Name)
 
 				if p.DownloadArtifacts && c.Artifacts.BuildHasArtifact(build.ID) {
 					log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
