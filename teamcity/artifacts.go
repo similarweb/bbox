@@ -38,6 +38,7 @@ func (as *ArtifactsService) BuildHasArtifact(buildID int) bool {
 		log.Debugf("buildID: %d sleeping and rechecking artifact children", buildID)
 		time.Sleep(30 * time.Second)
 		artifactChildren, err = as.GetArtifactChildren(buildID)
+		hasArtifacts = artifactChildren.Count > 0
 
 		log.Debugf("after sleeping buildID: %d artifactChildren.Count: %d", buildID, artifactChildren.Count)
 		log.Debugf("after sleeping buildID: %d artifactChildren.File len: %d", buildID, len(artifactChildren.File))
