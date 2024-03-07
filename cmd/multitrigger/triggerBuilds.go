@@ -145,16 +145,8 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 // handleArtifacts handles the artifacts logic for a build, downloading and unzipping them if needed.
 // Returns true if artifacts were downloaded, false otherwise.
 func handleArtifacts(c *teamcity.Client, buildID int, buildTypeID, buildTypeName string) (bool, error) {
-	artifactsExist := c.Artifacts.BuildHasArtifact(buildID, artifactsRetryAttempts)
-
-	downloadArtifacts := false
-
-	if requireArtifacts && !artifactsExist {
-		log.Errorf("did not get artifacts for build %d, and requireArtifacts is true", buildID)
-		return false, errors.New("build requires artifacts and did not produce any")
-	}
-
-	if artifactsExist {
+	// if we have artifacts, download them
+	if c.Artifacts.BuildHasArtifact(buildID, artifactsRetryAttempts) {
 		log.Infof("downloading Artifacts for %s", buildTypeName)
 
 		err := c.Artifacts.DownloadAndUnzipArtifacts(buildID, buildTypeID, multiArtifactsPath)
@@ -162,7 +154,13 @@ func handleArtifacts(c *teamcity.Client, buildID int, buildTypeID, buildTypeName
 			log.Errorf("error downloading artifacts for build %s: %s", buildTypeName, err.Error())
 			return false, errors.Wrap(err, "error downloading artifacts")
 		}
-		downloadArtifacts = true
+		return true, nil
 	}
-	return downloadArtifacts, nil
+	// if we require artifacts and did not get any, fail the build
+	if requireArtifacts {
+		log.Errorf("did not get artifacts for build %d, and requireArtifacts is true", buildID)
+		return false, errors.New("build requires artifacts and did not produce any")
+	}
+
+	return false, nil
 }

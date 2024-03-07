@@ -43,7 +43,8 @@ func (as *ArtifactsService) BuildHasArtifact(buildID int, getArtifactsAttempts u
 			if err != nil {
 				log.Errorf("error checking for artifacts: %s", err)
 				return err
-			} else if artifactChildren.Count <= 0 {
+			}
+			if artifactChildren.Count == 0 {
 				return errArtifactsNotFound
 			}
 			return nil
@@ -54,8 +55,8 @@ func (as *ArtifactsService) BuildHasArtifact(buildID int, getArtifactsAttempts u
 		}),
 		retry.Attempts(getArtifactsAttempts),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
-			delay := time.Duration(math.Pow(2, float64(n+1)))
-			if time.Duration(delay.Seconds()) > time.Duration(maxDelay.Seconds()) {
+			delay := time.Second * time.Duration(math.Pow(2, float64(n+1)))
+			if delay > maxDelay {
 				delay = maxDelay
 			}
 			log.Infof("no artifacts found yet for build: %d, rechecking in %d seconds", buildID, time.Duration(delay.Seconds()))

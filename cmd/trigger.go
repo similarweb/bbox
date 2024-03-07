@@ -31,9 +31,9 @@ var triggerCmd = &cobra.Command{
 	Short: "Trigger a single TeamCity Build",
 	Long:  `Trigger a single TeamCity Build`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if artifactsRetryAttempts < 1 {
-			log.Errorf("artifacts-retry-attempts cannot be zero")
-			os.Exit(1)
+		if artifactsRetryAttempts == 0 {
+			log.Infof("artifacts-retry-attempts cannot be zero, changed to 1")
+			artifactsRetryAttempts = 1
 		}
 		url, err := url.Parse(TeamcityURL)
 		if err != nil {
