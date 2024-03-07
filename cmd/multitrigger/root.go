@@ -16,6 +16,8 @@ var (
 	multiArtifactsPath      = "./"
 	waitForBuilds           = true
 	waitTimeout             = 15 * time.Minute
+	artifactsRetryAttempts  uint
+	requireArtifacts        bool
 )
 
 var Cmd = &cobra.Command{
@@ -23,6 +25,10 @@ var Cmd = &cobra.Command{
 	Short: "Multi-trigger a TeamCity Build",
 	Long:  `"Multi-trigger a TeamCity Build",`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if artifactsRetryAttempts < 1 {
+			log.Errorf("artifacts-retry-attempts cannot be zero")
+			os.Exit(1)
+		}
 		teamcityUsername, _ := cmd.Root().PersistentFlags().GetString("teamcity-username")
 		teamcityPassword, _ := cmd.Root().PersistentFlags().GetString("teamcity-password")
 		teamcityURL, _ := cmd.Root().PersistentFlags().GetString("teamcity-url")
@@ -42,7 +48,7 @@ var Cmd = &cobra.Command{
 
 		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
 
-		triggerBuilds(client, allCombinations, waitForBuilds, waitTimeout, multiArtifactsPath)
+		triggerBuilds(client, allCombinations, waitForBuilds, waitTimeout, multiArtifactsPath, artifactsRetryAttempts, requireArtifacts)
 	},
 }
 
@@ -51,4 +57,6 @@ func init() {
 	Cmd.PersistentFlags().StringVar(&multiArtifactsPath, "artifacts-path", multiArtifactsPath, "Path to download Artifacts to")
 	Cmd.PersistentFlags().BoolVarP(&waitForBuilds, "wait-for-builds", "w", waitForBuilds, "Wait for builds to finish and get status")
 	Cmd.PersistentFlags().DurationVarP(&waitTimeout, "wait-timeout", "t", waitTimeout, "Timeout for waiting for builds to finish")
+	Cmd.PersistentFlags().UintVar(&artifactsRetryAttempts, "artifacts-retry-attempts", 1, "Number of attempts to retry fetching for artifacts, a non-zero value. when larger than 1 will retry fetching artifacts and will return an error if no artifacts found after the given attempts")
+	Cmd.PersistentFlags().BoolVar(&requireArtifacts, "require-artifacts", false, "If downloadArtifactsBool is true, and no artifacts found, return an error")
 }

@@ -11,7 +11,7 @@ import (
 )
 
 // triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group.
-func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string) {
+func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string, multiArtifactRetryAttempts uint, requireArtifacts bool) {
 	flowFailed := false
 	resultsChan := make(chan types.BuildResult, len(parameters))
 
@@ -26,10 +26,14 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 			defer wg.Done() // Decrement the counter when the goroutine completes
 
 			log.WithFields(log.Fields{
-				"branchName":        p.BranchName,
-				"buildTypeId":       p.BuildTypeID,
-				"properties":        p.PropertiesFlag,
-				"downloadArtifacts": p.DownloadArtifacts,
+				"branchName":                 p.BranchName,
+				"buildTypeId":                p.BuildTypeID,
+				"properties":                 p.PropertiesFlag,
+				"downloadArtifacts":          p.DownloadArtifacts,
+				"artifactsPath":              multiArtifactsPath,
+				"requireArtifacts":           requireArtifacts,
+				"multiArtifactRetryAttempts": multiArtifactRetryAttempts,
+				"waitForBuilds":              waitForBuilds,
 			}).Debug("triggering Build")
 
 			triggerResponse, err := c.Build.TriggerBuild(p.BuildTypeID, p.BranchName, p.PropertiesFlag)
@@ -79,17 +83,18 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 					return
 				}
 
+				status = build.Status
+
 				log.WithFields(log.Fields{
 					"buildStatus": build.Status,
 					"buildState":  build.State,
 				}).Infof("build %s finished", triggerResponse.BuildType.Name)
 
-				if p.DownloadArtifacts && c.Artifacts.BuildHasArtifact(build.ID) {
-					log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
+				if p.DownloadArtifacts {
+					artifactsExist := c.Artifacts.BuildHasArtifact(build.ID, multiArtifactRetryAttempts)
 
-					err = c.Artifacts.DownloadAndUnzipArtifacts(build.ID, p.BuildTypeID, multiArtifactsPath)
-					if err != nil {
-						log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+					if requireArtifacts && !artifactsExist {
+						log.Errorf("did not get artifacts for build %s, and requireArtifacts is true", triggerResponse.BuildType.Name)
 
 						flowFailed = true
 
@@ -97,18 +102,38 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 							BuildName:           triggerResponse.BuildType.Name,
 							WebURL:              triggerResponse.WebURL,
 							BranchName:          p.BranchName,
-							BuildStatus:         build.Status,
+							BuildStatus:         status,
 							DownloadedArtifacts: false,
-							Error:               errors.Wrap(err, "error downloading artifacts"),
+							Error:               errors.New("build requires artifacts and did not produce any"),
 						}
 
 						return
 					}
 
-					downloadedArtifacts = err == nil
-				}
+					if artifactsExist {
+						log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
 
-				status = build.Status
+						err = c.Artifacts.DownloadAndUnzipArtifacts(build.ID, p.BuildTypeID, multiArtifactsPath)
+						if err != nil {
+							log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+
+							flowFailed = true
+
+							resultsChan <- types.BuildResult{
+								BuildName:           triggerResponse.BuildType.Name,
+								WebURL:              triggerResponse.WebURL,
+								BranchName:          p.BranchName,
+								BuildStatus:         status,
+								DownloadedArtifacts: false,
+								Error:               errors.Wrap(err, "error downloading artifacts"),
+							}
+
+							return
+						}
+
+						downloadedArtifacts = err == nil
+					}
+				}
 			}
 			// mark flow as failed if we had a build failure or error
 			flowFailed = flowFailed || (status != "SUCCESS")

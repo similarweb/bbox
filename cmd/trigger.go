@@ -17,11 +17,13 @@ var (
 )
 
 var (
-	buildTypeID         string
-	propertiesFlag      map[string]string
-	downloadArtifacts   bool
-	waitForBuild        bool
-	waitForBuildTimeout = 15 * time.Minute
+	buildTypeID            string
+	propertiesFlag         map[string]string
+	downloadArtifacts      bool
+	waitForBuild           bool
+	waitForBuildTimeout    = 15 * time.Minute
+	artifactsRetryAttempts uint
+	requireArtifacts       bool
 )
 
 var triggerCmd = &cobra.Command{
@@ -29,6 +31,10 @@ var triggerCmd = &cobra.Command{
 	Short: "Trigger a single TeamCity Build",
 	Long:  `Trigger a single TeamCity Build`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if artifactsRetryAttempts < 1 {
+			log.Errorf("artifacts-retry-attempts cannot be zero")
+			os.Exit(1)
+		}
 		url, err := url.Parse(TeamcityURL)
 		if err != nil {
 			log.Errorf("error parsing TeamCity URL: %s", err)
@@ -68,21 +74,30 @@ var triggerCmd = &cobra.Command{
 				os.Exit(2)
 			}
 
+			status = build.Status
+
 			log.WithFields(log.Fields{
-				"buildStatus": build.Status,
+				"buildStatus": status,
 				"buildState":  build.State,
 			}).Infof("Build %s Finished", triggerResponse.BuildType.Name)
 
-			if downloadArtifacts && err == nil && client.Artifacts.BuildHasArtifact(build.ID) {
-				log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
-				err = client.Artifacts.DownloadAndUnzipArtifacts(build.ID, buildTypeID, artifactsPath)
-				if err != nil {
-					log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
-				}
-				downloadedArtifacts = err == nil
-			}
+			if downloadArtifacts {
+				artifactsExist := client.Artifacts.BuildHasArtifact(build.ID, artifactsRetryAttempts)
 
-			status = build.Status
+				if requireArtifacts && !artifactsExist {
+					log.Errorf("did not get artifacts for build %s, and requireArtifacts is true", triggerResponse.BuildType.Name)
+					os.Exit(2)
+				}
+
+				if artifactsExist {
+					log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
+					err = client.Artifacts.DownloadAndUnzipArtifacts(build.ID, buildTypeID, artifactsPath)
+					if err != nil {
+						log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+					}
+					downloadedArtifacts = err == nil
+				}
+			}
 		}
 		log.WithFields(log.Fields{
 			"BuildName":           triggerResponse.BuildType.Name,
@@ -105,4 +120,6 @@ func init() {
 	triggerCmd.PersistentFlags().BoolVarP(&downloadArtifacts, "download-artifacts", "d", downloadArtifacts, "Download Artifacts")
 	triggerCmd.PersistentFlags().StringVarP(&branchName, "branch-name", "b", branchName, "The Branch Name")
 	triggerCmd.PersistentFlags().StringToStringVarP(&propertiesFlag, "properties", "p", nil, "The properties in key=value format")
+	triggerCmd.PersistentFlags().UintVar(&artifactsRetryAttempts, "artifacts-retry-attempts", 1, "Number of attempts to retry fetching for artifacts, a non-zero value. when larger than 1 will retry fetching artifacts and will return an error if no artifacts found after the given attempts")
+	triggerCmd.PersistentFlags().BoolVar(&requireArtifacts, "require-artifacts", true, "If downloadArtifacts is true, and no artifacts found, return an error")
 }
