@@ -142,6 +142,8 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 	log.Debugf("all builds finished successfully")
 }
 
+// handleArtifacts handles the artifacts logic for a build, downloading and unzipping them if needed.
+// Returns true if artifacts were downloaded, false otherwise.
 func handleArtifacts(c *teamcity.Client, buildID int, buildTypeID, buildTypeName string) (bool, error) {
 	artifactsExist := c.Artifacts.BuildHasArtifact(buildID, artifactsRetryAttempts)
 
