@@ -28,6 +28,7 @@ const maxDelay = 20 * time.Second // Maximum delay
 // getArtifactsAttempts is the number of attempts to retry fetching for artifacts, a non-zero value.
 func (as *ArtifactsService) BuildHasArtifact(buildID int, getArtifactsAttempts uint) bool {
 	var errArtifactsNotFound = errors.New("no artifacts found")
+
 	var artifactChildren types.ArtifactChildren
 
 	log.WithFields(log.Fields{

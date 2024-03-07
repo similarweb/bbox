@@ -11,7 +11,7 @@ import (
 )
 
 // triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group.
-func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string, multiArtifactRetryAttempts uint, requireArtifacts bool) {
+func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string, artifactsRetryAttempts uint, requireArtifacts bool) {
 	flowFailed := false
 	resultsChan := make(chan types.BuildResult, len(parameters))
 
@@ -32,7 +32,7 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 				"downloadArtifacts":          p.DownloadArtifacts,
 				"artifactsPath":              multiArtifactsPath,
 				"requireArtifacts":           requireArtifacts,
-				"multiArtifactRetryAttempts": multiArtifactRetryAttempts,
+				"multiArtifactRetryAttempts": artifactsRetryAttempts,
 				"waitForBuilds":              waitForBuilds,
 			}).Debug("triggering Build")
 
@@ -91,10 +91,9 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 				}).Infof("build %s finished", triggerResponse.BuildType.Name)
 
 				if p.DownloadArtifacts {
-					artifactsExist := c.Artifacts.BuildHasArtifact(build.ID, multiArtifactRetryAttempts)
-
-					if requireArtifacts && !artifactsExist {
-						log.Errorf("did not get artifacts for build %s, and requireArtifacts is true", triggerResponse.BuildType.Name)
+					downloadedArtifacts, err = handleArtifacts(c, build.ID, p.BuildTypeID, triggerResponse.BuildType.Name)
+					if err != nil {
+						log.Errorf("error handling artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 
 						flowFailed = true
 
@@ -103,35 +102,11 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 							WebURL:              triggerResponse.WebURL,
 							BranchName:          p.BranchName,
 							BuildStatus:         status,
-							DownloadedArtifacts: false,
-							Error:               errors.New("build requires artifacts and did not produce any"),
+							DownloadedArtifacts: downloadedArtifacts,
+							Error:               errors.Wrap(err, "error handling artifacts"),
 						}
 
 						return
-					}
-
-					if artifactsExist {
-						log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
-
-						err = c.Artifacts.DownloadAndUnzipArtifacts(build.ID, p.BuildTypeID, multiArtifactsPath)
-						if err != nil {
-							log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
-
-							flowFailed = true
-
-							resultsChan <- types.BuildResult{
-								BuildName:           triggerResponse.BuildType.Name,
-								WebURL:              triggerResponse.WebURL,
-								BranchName:          p.BranchName,
-								BuildStatus:         status,
-								DownloadedArtifacts: false,
-								Error:               errors.Wrap(err, "error downloading artifacts"),
-							}
-
-							return
-						}
-
-						downloadedArtifacts = err == nil
 					}
 				}
 			}
@@ -165,4 +140,27 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 	}
 
 	log.Debugf("all builds finished successfully")
+}
+
+func handleArtifacts(c *teamcity.Client, buildID int, buildTypeID, buildTypeName string) (bool, error) {
+	artifactsExist := c.Artifacts.BuildHasArtifact(buildID, artifactsRetryAttempts)
+
+	downloadArtifacts := false
+
+	if requireArtifacts && !artifactsExist {
+		log.Errorf("did not get artifacts for build %d, and requireArtifacts is true", buildID)
+		return false, errors.New("build requires artifacts and did not produce any")
+	}
+
+	if artifactsExist {
+		log.Infof("downloading Artifacts for %s", buildTypeName)
+
+		err := c.Artifacts.DownloadAndUnzipArtifacts(buildID, buildTypeID, multiArtifactsPath)
+		if err != nil {
+			log.Errorf("error downloading artifacts for build %s: %s", buildTypeName, err.Error())
+			return false, errors.Wrap(err, "error downloading artifacts")
+		}
+		downloadArtifacts = true
+	}
+	return downloadArtifacts, nil
 }
