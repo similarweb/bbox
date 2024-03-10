@@ -123,11 +123,15 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 	err = retry.Do(
 		func() error {
 			status, err = bs.GetBuildStatus(buildNumber)
+
 			if err != nil {
 				log.Errorf("error getting build status: %s", err)
 				return err
-			} else if status.State != "finished" {
-				log.Debugf("%s state is: %s", buildName, status.State)
+			}
+
+			log.Debugf("%s state is: %s", buildName, status.State)
+
+			if status.State != "finished" {
 				return errBuildNotFinished
 			}
 
@@ -138,6 +142,8 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 		retry.RetryIf(func(err error) bool {
 			return errors.Is(err, errBuildNotFinished)
 		}),
+		// default is 10, so we have to put 0 to disable it
+		retry.Attempts(0),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
 			delay := baseDelay * time.Duration((n+1)*factor)
 			if time.Duration(delay.Seconds()) > time.Duration(maxDelay.Seconds()) {
@@ -149,6 +155,10 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 			return delay
 		}),
 	)
+
+	if err != nil && !errors.Is(err, errBuildNotFinished) {
+		return status, errors.Wrapf(err, "error waiting for build %s", buildName)
+	}
 
 	return status, nil
 }

@@ -16,6 +16,7 @@ var (
 	multiArtifactsPath      = "./"
 	waitForBuilds           = true
 	waitTimeout             = 15 * time.Minute
+	requireArtifacts        bool
 )
 
 var Cmd = &cobra.Command{
@@ -42,7 +43,7 @@ var Cmd = &cobra.Command{
 
 		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
 
-		triggerBuilds(client, allCombinations, waitForBuilds, waitTimeout, multiArtifactsPath)
+		triggerBuilds(client, allCombinations, waitForBuilds, waitTimeout, multiArtifactsPath, requireArtifacts)
 	},
 }
 
@@ -50,5 +51,6 @@ func init() {
 	Cmd.PersistentFlags().StringSliceVarP(&buildParamsCombinations, "build-params-combination", "c", []string{}, "Combinations as 'buildTypeID;branchName;downloadArtifactsBool;key1=value1&key2=value2' format. Repeatable. example: 'byBuildId;master;true;key=value&key2=value2'")
 	Cmd.PersistentFlags().StringVar(&multiArtifactsPath, "artifacts-path", multiArtifactsPath, "Path to download Artifacts to")
 	Cmd.PersistentFlags().BoolVarP(&waitForBuilds, "wait-for-builds", "w", waitForBuilds, "Wait for builds to finish and get status")
-	Cmd.PersistentFlags().DurationVarP(&waitTimeout, "wait-timeout", "t", waitTimeout, "Timeout for waiting for builds to finish")
+	Cmd.PersistentFlags().DurationVarP(&waitTimeout, "wait-timeout", "t", waitTimeout, "Timeout for waiting for builds to finish, default is 15 minutes")
+	Cmd.PersistentFlags().BoolVar(&requireArtifacts, "require-artifacts", false, "If downloadArtifactsBool is true, and no artifacts found, return an error")
 }
