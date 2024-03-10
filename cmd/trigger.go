@@ -17,13 +17,12 @@ var (
 )
 
 var (
-	buildTypeID            string
-	propertiesFlag         map[string]string
-	downloadArtifacts      bool
-	waitForBuild           bool
-	waitForBuildTimeout    = 15 * time.Minute
-	artifactsRetryAttempts uint
-	requireArtifacts       bool
+	buildTypeID         string
+	propertiesFlag      map[string]string
+	downloadArtifacts   bool
+	waitForBuild        bool
+	waitForBuildTimeout = 15 * time.Minute
+	requireArtifacts    bool
 )
 
 var triggerCmd = &cobra.Command{
@@ -31,10 +30,6 @@ var triggerCmd = &cobra.Command{
 	Short: "Trigger a single TeamCity Build",
 	Long:  `Trigger a single TeamCity Build`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if artifactsRetryAttempts == 0 {
-			log.Infof("artifacts-retry-attempts cannot be zero, changed to 1")
-			artifactsRetryAttempts = 1
-		}
 		url, err := url.Parse(TeamcityURL)
 		if err != nil {
 			log.Errorf("error parsing TeamCity URL: %s", err)
@@ -82,7 +77,7 @@ var triggerCmd = &cobra.Command{
 			}).Infof("Build %s Finished", triggerResponse.BuildType.Name)
 
 			if downloadArtifacts {
-				artifactsExist := client.Artifacts.BuildHasArtifact(build.ID, artifactsRetryAttempts)
+				artifactsExist := client.Artifacts.BuildHasArtifact(build.ID)
 
 				if requireArtifacts && !artifactsExist {
 					log.Errorf("did not get artifacts for build %s, and requireArtifacts is true", triggerResponse.BuildType.Name)
@@ -120,6 +115,5 @@ func init() {
 	triggerCmd.PersistentFlags().BoolVarP(&downloadArtifacts, "download-artifacts", "d", downloadArtifacts, "Download Artifacts")
 	triggerCmd.PersistentFlags().StringVarP(&branchName, "branch-name", "b", branchName, "The Branch Name")
 	triggerCmd.PersistentFlags().StringToStringVarP(&propertiesFlag, "properties", "p", nil, "The properties in key=value format")
-	triggerCmd.PersistentFlags().UintVar(&artifactsRetryAttempts, "artifacts-retry-attempts", 1, "Number of attempts to retry fetching for artifacts, a non-zero value. when larger than 1 will retry fetching artifacts and will return an error if no artifacts found after the given attempts")
 	triggerCmd.PersistentFlags().BoolVar(&requireArtifacts, "require-artifacts", true, "If downloadArtifacts is true, and no artifacts found, return an error")
 }

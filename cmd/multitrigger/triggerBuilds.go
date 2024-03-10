@@ -11,7 +11,7 @@ import (
 )
 
 // triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group.
-func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string, artifactsRetryAttempts uint, requireArtifacts bool) {
+func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string, requireArtifacts bool) {
 	flowFailed := false
 	resultsChan := make(chan types.BuildResult, len(parameters))
 
@@ -26,14 +26,13 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 			defer wg.Done() // Decrement the counter when the goroutine completes
 
 			log.WithFields(log.Fields{
-				"branchName":                 p.BranchName,
-				"buildTypeId":                p.BuildTypeID,
-				"properties":                 p.PropertiesFlag,
-				"downloadArtifacts":          p.DownloadArtifacts,
-				"artifactsPath":              multiArtifactsPath,
-				"requireArtifacts":           requireArtifacts,
-				"multiArtifactRetryAttempts": artifactsRetryAttempts,
-				"waitForBuilds":              waitForBuilds,
+				"branchName":        p.BranchName,
+				"buildTypeId":       p.BuildTypeID,
+				"properties":        p.PropertiesFlag,
+				"downloadArtifacts": p.DownloadArtifacts,
+				"artifactsPath":     multiArtifactsPath,
+				"requireArtifacts":  requireArtifacts,
+				"waitForBuilds":     waitForBuilds,
 			}).Debug("triggering Build")
 
 			triggerResponse, err := c.Build.TriggerBuild(p.BuildTypeID, p.BranchName, p.PropertiesFlag)
@@ -146,7 +145,7 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 // Returns true if artifacts were downloaded, false otherwise.
 func handleArtifacts(c *teamcity.Client, buildID int, buildTypeID, buildTypeName string) (bool, error) {
 	// if we have artifacts, download them
-	if c.Artifacts.BuildHasArtifact(buildID, artifactsRetryAttempts) {
+	if c.Artifacts.BuildHasArtifact(buildID) {
 		log.Infof("downloading Artifacts for %s", buildTypeName)
 
 		err := c.Artifacts.DownloadAndUnzipArtifacts(buildID, buildTypeID, multiArtifactsPath)
