@@ -22,6 +22,7 @@ var (
 	downloadArtifacts   bool
 	waitForBuild        bool
 	waitForBuildTimeout = 15 * time.Minute
+	requireArtifacts    bool
 )
 
 var triggerCmd = &cobra.Command{
@@ -68,21 +69,30 @@ var triggerCmd = &cobra.Command{
 				os.Exit(2)
 			}
 
+			status = build.Status
+
 			log.WithFields(log.Fields{
-				"buildStatus": build.Status,
+				"buildStatus": status,
 				"buildState":  build.State,
 			}).Infof("Build %s Finished", triggerResponse.BuildType.Name)
 
-			if downloadArtifacts && err == nil && client.Artifacts.BuildHasArtifact(build.ID) {
-				log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
-				err = client.Artifacts.DownloadAndUnzipArtifacts(build.ID, buildTypeID, artifactsPath)
-				if err != nil {
-					log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
-				}
-				downloadedArtifacts = err == nil
-			}
+			if downloadArtifacts {
+				artifactsExist := client.Artifacts.BuildHasArtifact(build.ID)
 
-			status = build.Status
+				if requireArtifacts && !artifactsExist {
+					log.Errorf("did not get artifacts for build %s, and requireArtifacts is true", triggerResponse.BuildType.Name)
+					os.Exit(2)
+				}
+
+				if artifactsExist {
+					log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
+					err = client.Artifacts.DownloadAndUnzipArtifacts(build.ID, buildTypeID, artifactsPath)
+					if err != nil {
+						log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+					}
+					downloadedArtifacts = err == nil
+				}
+			}
 		}
 		log.WithFields(log.Fields{
 			"BuildName":           triggerResponse.BuildType.Name,
@@ -101,8 +111,9 @@ func init() {
 	triggerCmd.PersistentFlags().StringVarP(&buildTypeID, "build-type-id", "i", "", "The Build Type")
 	triggerCmd.PersistentFlags().StringVar(&artifactsPath, "artifacts-path", artifactsPath, "Path to download Artifacts to")
 	triggerCmd.PersistentFlags().BoolVarP(&waitForBuild, "wait-for-build", "w", waitForBuild, "Wait for build to finish and get status")
-	triggerCmd.PersistentFlags().DurationVarP(&waitForBuildTimeout, "wait-timeout", "t", waitForBuildTimeout, "Timeout for waiting for build to finish")
+	triggerCmd.PersistentFlags().DurationVarP(&waitForBuildTimeout, "wait-timeout", "t", waitForBuildTimeout, "Timeout for waiting for build to finish, default is 15 minutes")
 	triggerCmd.PersistentFlags().BoolVarP(&downloadArtifacts, "download-artifacts", "d", downloadArtifacts, "Download Artifacts")
 	triggerCmd.PersistentFlags().StringVarP(&branchName, "branch-name", "b", branchName, "The Branch Name")
 	triggerCmd.PersistentFlags().StringToStringVarP(&propertiesFlag, "properties", "p", nil, "The properties in key=value format")
+	triggerCmd.PersistentFlags().BoolVar(&requireArtifacts, "require-artifacts", false, "If downloadArtifacts is true, and no artifacts found, return an error")
 }

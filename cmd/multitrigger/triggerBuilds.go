@@ -11,7 +11,7 @@ import (
 )
 
 // triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group.
-func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string) {
+func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string, requireArtifacts bool) {
 	flowFailed := false
 	resultsChan := make(chan types.BuildResult, len(parameters))
 
@@ -30,6 +30,9 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 				"buildTypeId":       p.BuildTypeID,
 				"properties":        p.PropertiesFlag,
 				"downloadArtifacts": p.DownloadArtifacts,
+				"artifactsPath":     multiArtifactsPath,
+				"requireArtifacts":  requireArtifacts,
+				"waitForBuilds":     waitForBuilds,
 			}).Debug("triggering Build")
 
 			triggerResponse, err := c.Build.TriggerBuild(p.BuildTypeID, p.BranchName, p.PropertiesFlag)
@@ -79,17 +82,17 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 					return
 				}
 
+				status = build.Status
+
 				log.WithFields(log.Fields{
 					"buildStatus": build.Status,
 					"buildState":  build.State,
-				}).Infof("build %s Finished", triggerResponse.BuildType.Name)
+				}).Infof("build %s finished", triggerResponse.BuildType.Name)
 
-				if p.DownloadArtifacts && err == nil && c.Artifacts.BuildHasArtifact(build.ID) {
-					log.Infof("downloading Artifacts for %s", triggerResponse.BuildType.Name)
-
-					err = c.Artifacts.DownloadAndUnzipArtifacts(build.ID, p.BuildTypeID, multiArtifactsPath)
+				if p.DownloadArtifacts {
+					downloadedArtifacts, err = handleArtifacts(c, build.ID, p.BuildTypeID, triggerResponse.BuildType.Name)
 					if err != nil {
-						log.Errorf("error downloading artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
+						log.Errorf("error handling artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 
 						flowFailed = true
 
@@ -97,18 +100,14 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 							BuildName:           triggerResponse.BuildType.Name,
 							WebURL:              triggerResponse.WebURL,
 							BranchName:          p.BranchName,
-							BuildStatus:         build.Status,
-							DownloadedArtifacts: false,
-							Error:               errors.Wrap(err, "error downloading artifacts"),
+							BuildStatus:         status,
+							DownloadedArtifacts: downloadedArtifacts,
+							Error:               errors.Wrap(err, "error handling artifacts"),
 						}
 
 						return
 					}
-
-					downloadedArtifacts = err == nil
 				}
-
-				status = build.Status
 			}
 			// mark flow as failed if we had a build failure or error
 			flowFailed = flowFailed || (status != "SUCCESS")
@@ -140,4 +139,27 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 	}
 
 	log.Debugf("all builds finished successfully")
+}
+
+// handleArtifacts handles the artifacts logic for a build, downloading and unzipping them if needed.
+// Returns true if artifacts were downloaded, false otherwise.
+func handleArtifacts(c *teamcity.Client, buildID int, buildTypeID, buildTypeName string) (bool, error) {
+	// if we have artifacts, download them
+	if c.Artifacts.BuildHasArtifact(buildID) {
+		log.Infof("downloading Artifacts for %s", buildTypeName)
+
+		err := c.Artifacts.DownloadAndUnzipArtifacts(buildID, buildTypeID, multiArtifactsPath)
+		if err != nil {
+			log.Errorf("error downloading artifacts for build %s: %s", buildTypeName, err.Error())
+			return false, errors.Wrap(err, "error downloading artifacts")
+		}
+		return true, nil
+	}
+	// if we require artifacts and did not get any, fail the build
+	if requireArtifacts {
+		log.Errorf("did not get artifacts for build %d, and requireArtifacts is true", buildID)
+		return false, errors.New("build requires artifacts and did not produce any")
+	}
+
+	return false, nil
 }

@@ -2,14 +2,13 @@ package teamcity
 
 import (
 	"bbox/pkg/types"
+	"bbox/pkg/utils"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"bbox/pkg/utils"
 
 	"github.com/pkg/errors"
 
@@ -21,8 +20,24 @@ type ArtifactsService service
 
 // BuildHasArtifact returns true if the build has artifacts.
 func (as *ArtifactsService) BuildHasArtifact(buildID int) bool {
-	artifactChildren, _ := as.GetArtifactChildren(buildID)
-	return artifactChildren.Count > 0
+
+	log.WithFields(log.Fields{
+		"buildID": buildID,
+	}).Debug("checking for artifacts")
+
+	artifactChildren, err := as.GetArtifactChildren(buildID)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"buildID": buildID,
+		}).Errorf("error getting artifact children: %s", err)
+		return false
+	}
+
+	hasArtifacts := artifactChildren.Count > 0
+
+	log.Debugf("buildID: %d has artifacts: %t", buildID, hasArtifacts)
+	return hasArtifacts
 }
 
 // GetArtifactChildren returns the children of an artifact if any.
