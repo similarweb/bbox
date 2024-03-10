@@ -4,9 +4,7 @@ import (
 	"bbox/pkg/types"
 	"encoding/json"
 	"fmt"
-	"github.com/avast/retry-go/v4"
 	"io"
-	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,7 +25,7 @@ const maxDelay = 20 * time.Second // Maximum delay
 // BuildHasArtifact returns true if the build has artifacts.
 // getArtifactsAttempts is the number of attempts to retry fetching for artifacts, a non-zero value.
 func (as *ArtifactsService) BuildHasArtifact(buildID int, getArtifactsAttempts uint) bool {
-	var errArtifactsNotFound = errors.New("no artifacts found")
+	//var errArtifactsNotFound = errors.New("no artifacts found")
 
 	var artifactChildren types.ArtifactChildren
 
@@ -36,39 +34,44 @@ func (as *ArtifactsService) BuildHasArtifact(buildID int, getArtifactsAttempts u
 		"getArtifactsAttempts": getArtifactsAttempts,
 	}).Debug("checking for artifacts")
 
-	err := retry.Do(
-		func() error {
-			var err error
-			artifactChildren, err = as.GetArtifactChildren(buildID)
-			if err != nil {
-				log.Errorf("error checking for artifacts: %s", err)
-				return err
-			}
-			if artifactChildren.Count == 0 {
-				return errArtifactsNotFound
-			}
-			return nil
-		},
-		// retry only if no artifacts found yet, exit for another error
-		retry.RetryIf(func(err error) bool {
-			return errors.Is(err, errArtifactsNotFound)
-		}),
-		retry.Attempts(getArtifactsAttempts),
-		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
-			delay := time.Second * time.Duration(math.Pow(2, float64(n+1)))
-			if delay > maxDelay {
-				delay = maxDelay
-			}
-			log.Infof("no artifacts found yet for build: %d, rechecking in %d seconds", buildID, time.Duration(delay.Seconds()))
-			return delay
-		}),
-	)
+	//err := retry.Do(
+	//	func() error {
+	//		var err error
+	//		artifactChildren, err = as.GetArtifactChildren(buildID)
+	//		if err != nil {
+	//			log.Errorf("error checking for artifacts: %s", err)
+	//			return err
+	//		}
+	//		if artifactChildren.Count == 0 {
+	//			return errArtifactsNotFound
+	//		}
+	//		return nil
+	//	},
+	//	// retry only if no artifacts found yet, exit for another error
+	//	retry.RetryIf(func(err error) bool {
+	//		return errors.Is(err, errArtifactsNotFound)
+	//	}),
+	//	retry.Attempts(getArtifactsAttempts),
+	//	retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+	//		delay := (time.Second) * time.Duration((n+1)*2)
+	//		if delay > maxDelay {
+	//			delay = maxDelay
+	//		}
+	//		log.Infof("no artifacts found yet for build: %d, rechecking in %d seconds", buildID, time.Duration(delay.Seconds()))
+	//		return delay
+	//	}),
+	//)
+	//
+	//if err != nil && !errors.Is(err, errArtifactsNotFound) {
+	//	log.Errorf("error getting artifact children: %s", err)
+	//	return false
+	//}
 
-	if err != nil && !errors.Is(err, errArtifactsNotFound) {
+	artifactChildren, err := as.GetArtifactChildren(buildID)
+	if err != nil {
 		log.Errorf("error getting artifact children: %s", err)
 		return false
 	}
-
 	hasArtifacts := artifactChildren.Count > 0
 
 	log.Debugf("buildID: %d has artifacts: %t", buildID, hasArtifacts)

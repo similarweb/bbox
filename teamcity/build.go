@@ -123,11 +123,15 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 	err = retry.Do(
 		func() error {
 			status, err = bs.GetBuildStatus(buildNumber)
+
 			if err != nil {
 				log.Errorf("error getting build status: %s", err)
 				return err
-			} else if status.State != "finished" {
-				log.Debugf("%s state is: %s", buildName, status.State)
+			}
+
+			log.Debugf("%s state is: %s", buildName, status.State)
+
+			if status.State != "finished" {
 				return errBuildNotFinished
 			}
 
@@ -149,6 +153,10 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 			return delay
 		}),
 	)
+
+	if err != nil && !errors.Is(err, errBuildNotFinished) {
+		return status, errors.Wrapf(err, "error waiting for build %s", buildName)
+	}
 
 	return status, nil
 }
