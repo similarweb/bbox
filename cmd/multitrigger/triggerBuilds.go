@@ -3,7 +3,8 @@ package multitrigger
 import (
 	"bbox/pkg/types"
 	"bbox/teamcity"
-	"github.com/pkg/errors"
+	"errors"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"sync"
@@ -47,7 +48,7 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 					BranchName:          p.BranchName,
 					BuildStatus:         "NOT_TRIGGERED",
 					DownloadedArtifacts: false,
-					Error:               errors.Wrap(err, "error triggering build"),
+					Error:               fmt.Errorf("error triggering build: %w", err),
 				}
 
 				return
@@ -76,7 +77,7 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 						BranchName:          p.BranchName,
 						BuildStatus:         status,
 						DownloadedArtifacts: false,
-						Error:               errors.Wrap(err, "error waiting for build"),
+						Error:               fmt.Errorf("error waiting for build: %w", err),
 					}
 
 					return
@@ -102,7 +103,7 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 							BranchName:          p.BranchName,
 							BuildStatus:         status,
 							DownloadedArtifacts: downloadedArtifacts,
-							Error:               errors.Wrap(err, "error handling artifacts"),
+							Error:               fmt.Errorf("error handling artifacts: %w", err),
 						}
 
 						return
@@ -151,7 +152,7 @@ func handleArtifacts(c *teamcity.Client, buildID int, buildTypeID, buildTypeName
 		err := c.Artifacts.DownloadAndUnzipArtifacts(buildID, buildTypeID, multiArtifactsPath)
 		if err != nil {
 			log.Errorf("error downloading artifacts for build %s: %s", buildTypeName, err.Error())
-			return false, errors.Wrap(err, "error downloading artifacts")
+			return false, fmt.Errorf("error downloading artifacts: %w", err)
 		}
 		return true, nil
 	}

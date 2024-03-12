@@ -3,13 +3,12 @@ package teamcity
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"time"
 
 	"bbox/pkg/types"
-
-	"github.com/pkg/errors"
 
 	"github.com/avast/retry-go/v4"
 	log "github.com/sirupsen/logrus"
@@ -23,12 +22,12 @@ func (bs *BuildService) GetBuildStatus(buildID int) (types.BuildStatusResponse, 
 
 	req, err := bs.client.NewRequestWrapper("GET", getURL, nil)
 	if err != nil {
-		return types.BuildStatusResponse{}, errors.Wrapf(err, "error getting build status for build id: %d", buildID)
+		return types.BuildStatusResponse{}, fmt.Errorf("error getting build status for buildID %d: %w", buildID, err)
 	}
 
 	resp, err := bs.client.client.Do(req)
 	if err != nil {
-		return types.BuildStatusResponse{}, errors.Wrapf(err, "error getting build status for build id: %d", buildID)
+		return types.BuildStatusResponse{}, fmt.Errorf("error getting build status for buildID %d: %w", buildID, err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -41,7 +40,7 @@ func (bs *BuildService) GetBuildStatus(buildID int) (types.BuildStatusResponse, 
 
 	err = json.NewDecoder(resp.Body).Decode(bsr)
 	if err != nil {
-		return types.BuildStatusResponse{}, errors.Wrap(err, "error reading response body")
+		return types.BuildStatusResponse{}, fmt.Errorf("error reading response body: %w", err)
 	}
 
 	return *bsr, nil
@@ -70,13 +69,13 @@ func (bs *BuildService) TriggerBuild(buildTypeID, branchName string, params map[
 	req, err := bs.client.NewRequestWrapper("POST", "httpAuth/app/rest/buildQueue", data)
 	if err != nil {
 		log.Errorf("error creating request: %v", err)
-		return types.TriggerBuildWithParametersResponse{}, errors.Wrapf(err, "error creating request to trigger build")
+		return types.TriggerBuildWithParametersResponse{}, fmt.Errorf("error creating request to trigger build: %w", err)
 	}
 
 	resp, err := bs.client.client.Do(req)
 	if err != nil {
 		log.Errorf("error executing request to trigger build: %v", err)
-		return types.TriggerBuildWithParametersResponse{}, errors.Wrapf(err, "error executing request to trigger build")
+		return types.TriggerBuildWithParametersResponse{}, fmt.Errorf("error executing request to trigger build: %w", err)
 	}
 
 	log.Debugf("response status code: %d", resp.StatusCode)
@@ -157,7 +156,7 @@ func (bs *BuildService) WaitForBuild(buildName string, buildNumber int, timeout 
 	)
 
 	if err != nil && !errors.Is(err, errBuildNotFinished) {
-		return status, errors.Wrapf(err, "error waiting for build %s", buildName)
+		return status, fmt.Errorf("error waiting for build %s: %w", buildName, err)
 	}
 
 	return status, nil
