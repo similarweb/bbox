@@ -4,7 +4,6 @@ import (
 	"bbox/pkg/params"
 	"bbox/pkg/types"
 	"fmt"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
@@ -39,7 +38,7 @@ func parseCombinations(combinations []string) ([]types.BuildParameters, error) {
 
 		properties, err := parseProperties(parts[3])
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse properties: %s", parts[3])
+			return nil, fmt.Errorf("failed to parse properties: %s, error: %w", parts[3], err)
 		}
 
 		parsed = append(parsed, types.BuildParameters{

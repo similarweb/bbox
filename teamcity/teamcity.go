@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -71,7 +69,7 @@ func (c *Client) NewRequestWrapper(method, urlStr string, body interface{}, opts
 
 	u, err := c.baseURL.Parse(urlStr)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse url %s", urlStr)
+		return nil, fmt.Errorf("failed to parse url %s: %w", urlStr, err)
 	}
 
 	log.WithFields(log.Fields{
@@ -87,13 +85,13 @@ func (c *Client) NewRequestWrapper(method, urlStr string, body interface{}, opts
 
 		err := enc.Encode(body)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to encode body")
+			return nil, fmt.Errorf("failed to encode body: %w", err)
 		}
 	}
 
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create new request")
+		return nil, fmt.Errorf("failed to create new request: %w", err)
 	}
 
 	req.SetBasicAuth(c.BasicAuth.username, c.BasicAuth.password)

@@ -2,11 +2,11 @@ package utils
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -28,7 +28,7 @@ func UnzipFile(zipFilePath, destDir string) error {
 
 	r, err := zip.OpenReader(zipFilePath)
 	if err != nil {
-		return errors.Wrap(err, "error opening zip file")
+		return fmt.Errorf("error opening zip file: %w", err)
 	}
 	defer r.Close()
 
@@ -38,21 +38,21 @@ func UnzipFile(zipFilePath, destDir string) error {
 		if f.FileInfo().IsDir() {
 			err := os.MkdirAll(fpath, os.ModePerm)
 			if err != nil {
-				return errors.Wrap(err, "error creating dir")
+				return fmt.Errorf("error creating dir: %w", err)
 			}
 		} else {
 			if err := CreateDir(fpath); err != nil {
-				return errors.Wrap(err, "error creating dir")
+				return fmt.Errorf("error creating dir: %w", err)
 			}
 
 			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
-				return errors.Wrap(err, "error opening file")
+				return fmt.Errorf("error opening file: %w", err)
 			}
 
 			rc, err := f.Open()
 			if err != nil {
-				return errors.Wrap(err, "error opening file")
+				return fmt.Errorf("error opening file: %w", err)
 			}
 
 			_, err = io.Copy(outFile, rc)
@@ -62,7 +62,7 @@ func UnzipFile(zipFilePath, destDir string) error {
 			rc.Close()
 
 			if err != nil {
-				return errors.Wrap(err, "error copying file")
+				return fmt.Errorf("error copying file: %w", err)
 			}
 		}
 	}
