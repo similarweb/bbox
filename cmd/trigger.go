@@ -76,7 +76,7 @@ var triggerCmd = &cobra.Command{
 				"buildState":  build.State,
 			}).Infof("Build %s Finished", triggerResponse.BuildType.Name)
 
-			if downloadArtifacts {
+			if downloadArtifacts && status == "SUCCESS" {
 				artifactsExist := client.Artifacts.BuildHasArtifact(build.ID)
 
 				if requireArtifacts && !artifactsExist {
