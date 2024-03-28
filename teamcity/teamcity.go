@@ -22,6 +22,9 @@ type Client struct {
 	Artifacts *ArtifactsService
 	Queue     *QueueService
 	Build     *BuildService
+	VCSRoot   *VCSRootService
+	Project   *ProjectService
+	Template  *TemplateService
 }
 
 type BasicAuth struct {
@@ -54,6 +57,9 @@ func (c *Client) initializeServices() {
 	c.Artifacts = (*ArtifactsService)(&c.common)
 	c.Queue = (*QueueService)(&c.common)
 	c.Build = (*BuildService)(&c.common)
+	c.VCSRoot = (*VCSRootService)(&c.common)
+	c.Project = (*ProjectService)(&c.common)
+	c.Template = (*TemplateService)(&c.common)
 }
 
 // RequestOption represents an option that can modify an http.Request.
