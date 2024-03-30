@@ -11,6 +11,8 @@ require (
 	github.com/stretchr/testify v1.8.4
 )
 
+require github.com/alitto/pond v1.8.3 // indirect
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

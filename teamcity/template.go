@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
+
+	"github.com/alitto/pond"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -55,20 +58,43 @@ func (vcs *VCSRootService) GetAllVCSRootsTemplates() ([]string, error) {
 		return nil, err
 	}
 
+	// Create a pond with 50 workers and a buffered channel of 1000 tasks.
+	pool := pond.New(50, 1000)
+	defer pool.StopAndWait()
+
+	var mu sync.Mutex
 	vcsRootTemplates := []string{}
+	var overallError error
+
 	for _, projectID := range projectIDs {
-		templateIDs, err := vcs.GetProjectTemplates(projectID)
-		if err != nil {
-			return nil, err
-		}
+		projectID := projectID // avoid closure capturing issues
+		pool.Submit(func() {
+			if overallError != nil {
+				return
+			}
+			templateIDs, err := vcs.GetProjectTemplates(projectID)
+			if err != nil {
+				overallError = err
+				return
+			}
 
-		templateVCSRootIDs, err := vcs.GetVCSRootIDsFromTemplates(templateIDs)
-		if err != nil {
-			return nil, err
-		}
+			templateVCSRootIDs, err := vcs.GetVCSRootIDsFromTemplates(templateIDs)
+			if err != nil {
+				overallError = err
+				return
+			}
 
-		vcsRootTemplates = append(vcsRootTemplates, templateVCSRootIDs...)
+			mu.Lock()
+			vcsRootTemplates = append(vcsRootTemplates, templateVCSRootIDs...)
+			mu.Unlock()
+		})
+	}
 
+	// Wait for all tasks to complete
+	pool.StopAndWait()
+
+	if overallError != nil {
+		return nil, overallError
 	}
 
 	return vcsRootTemplates, nil

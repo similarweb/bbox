@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
+
+	"github.com/alitto/pond"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -79,26 +82,39 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() error {
 	}
 
 	unusedCount := 0 // Counter for unused VCS roots
-	for _, vcsRoot := range allVCSRoots {
-		isUnused, err := vcs.IsVcsRootHaveInstance(vcsRoot.ID)
-		if err != nil {
-			log.Errorf("error checking if VCS root is unused: %v", err)
-		}
+	pool := pond.New(50, 1000)
+	defer pool.StopAndWait()
 
-		if isUnused {
-			isInTemplate := false
-			for _, templateID := range vcsRootTemplats {
-				if vcsRoot.ID == templateID {
-					isInTemplate = true
-					break
+	var mu sync.Mutex // To safely increment unusedCount
+
+	for _, vcsRoot := range allVCSRoots {
+		vcsRoot := vcsRoot // Local scope redeclaration for closure
+		pool.Submit(func() {
+			isUnused, err := vcs.IsVcsRootHaveInstance(vcsRoot.ID)
+			if err != nil {
+				log.Errorf("error checking if VCS root is unused: %v", err)
+				return
+			}
+
+			if isUnused {
+				isInTemplate := false
+				for _, templateID := range vcsRootTemplats {
+					if vcsRoot.ID == templateID {
+						isInTemplate = true
+						break
+					}
+				}
+
+				if !isInTemplate {
+					mu.Lock()
+					unusedCount++ // Safe increment within the mutex
+					mu.Unlock()
 				}
 			}
-
-			if !isInTemplate {
-				unusedCount++ // if VCS root dosent have an instance and not in template
-			}
-		}
+		})
 	}
+
+	pool.StopAndWait()
 
 	fmt.Printf("Number of unused VCS roots: %d\n", unusedCount)
 	return nil

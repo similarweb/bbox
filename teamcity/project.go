@@ -72,13 +72,13 @@ func (vcs *VCSRootService) GetProjectTemplates(projectID string) ([]string, erro
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		log.Errorf("failed to get templates, status code: %d", response.StatusCode)
+		log.Errorf("failed to get templates, status code: %d, id: %v", response.StatusCode, projectID)
 	}
 
 	var templatesResponse TemplateResponse
 	err = json.NewDecoder(response.Body).Decode(&templatesResponse)
 	if err != nil {
-		log.Errorf("error decoding response body: %v", err)
+		log.Errorf("error decoding response body: %v, id: %v", err, projectID)
 	}
 
 	if templatesResponse.Count == 0 {
