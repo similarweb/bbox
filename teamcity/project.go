@@ -53,10 +53,10 @@ func (vcs *VCSRootService) GetAllProjects() ([]string, error) {
 		projectIDs = append(projectIDs, project.ID)
 	}
 
-	fmt.Printf("Number of projects: %d\n", len(projectIDs))
 	return projectIDs, nil
 }
 
+// GetProjectTemplates gets all template IDs from a project.
 func (vcs *VCSRootService) GetProjectTemplates(projectID string) ([]string, error) {
 
 	templatesURL := fmt.Sprintf("app/rest/projects/id:%s/templates", projectID)

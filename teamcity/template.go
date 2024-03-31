@@ -19,6 +19,7 @@ type VCSRootFromTemplateResponse struct {
 
 type TemplateService service
 
+// GetVCSRootIDsFromTemplates gets VCS root IDs from a list of template IDs.
 func (vcs *VCSRootService) GetVCSRootIDsFromTemplates(templateIDs []string) ([]string, error) {
 	vcsRootIDs := []string{}
 
@@ -52,6 +53,7 @@ func (vcs *VCSRootService) GetVCSRootIDsFromTemplates(templateIDs []string) ([]s
 	return vcsRootIDs, nil
 }
 
+// GetAllVCSRootsTemplates gets all VCS root IDs from list of all projects.
 func (vcs *VCSRootService) GetAllVCSRootsTemplates() ([]string, error) {
 	projectIDs, err := vcs.GetAllProjects()
 	if err != nil {

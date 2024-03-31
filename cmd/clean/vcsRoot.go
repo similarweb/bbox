@@ -15,7 +15,7 @@ var vcsRootCmdName string = "vcsRoot"
 
 var vcsRootCmd = &cobra.Command{
 	Use:   vcsRootCmdName,
-	Short: "Print project names of unused VCS roots",
+	Short: "Delete all unused VCS roots", // Unused VCS Root with no instances and not in any template!
 	Run: func(cmd *cobra.Command, args []string) {
 		teamcityUsername, _ := cmd.Root().PersistentFlags().GetString("teamcity-username")
 		teamcityPassword, _ := cmd.Root().PersistentFlags().GetString("teamcity-password")
@@ -30,14 +30,14 @@ var vcsRootCmd = &cobra.Command{
 		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
 		logger := log.WithField("teamcityURL", url.String())
 
-		logger.Info("going to print the TeamCity vcsRoot that unused.")
+		logger.Info("going to delete the TeamCity vcsRoot that unused.")
 
-		err = client.VCSRoot.GetUnusedVCSRoots()
+		unusedVcsRoot, err := client.VCSRoot.GetUnusedVCSRoots()
 		if err != nil {
 			fmt.Printf("Error getting VCS roots: %s\n", err)
 			return
 		}
-		fmt.Printf("Time taken: %s\n", time.Since(startMow))
+		logger.Infof(" %d vcs root have found in %s", unusedVcsRoot, time.Since(startMow))
 	},
 }
 
