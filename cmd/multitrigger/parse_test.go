@@ -2,6 +2,7 @@ package multitrigger
 
 import (
 	"bbox/pkg/types"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -94,13 +95,15 @@ func TestParseCombinations(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			output, err := parseCombinations(tc.combinations)
 
 			if tc.expectedError != "" {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.expectedError)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tc.expectedOutput, output)
 			}
 		})
