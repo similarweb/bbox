@@ -29,7 +29,7 @@ type VCSRootInstance struct {
 
 type VCSRootService service
 
-// GetAllVCSRootIDs getall VCS root IDs, using pagination.
+// GetAllVCSRootIDs retrieves all VCS root IDs, using pagination.
 func (vcs *VCSRootService) GetAllVCSRootIDs() ([]VCSRoot, error) {
 	allVCSRoots := []VCSRoot{}
 	nextURL := "app/rest/vcs-roots"
@@ -64,8 +64,8 @@ func (vcs *VCSRootService) GetAllVCSRootIDs() ([]VCSRoot, error) {
 
 }
 
-// GetUnusedVCSRoots gets the number of unused VCS roots.
-// Unused VCS Root with no instances and not in any template.
+// GetUnusedVCSRoots calculates the number of unused VCS roots.
+// "Unused" VCS Root refers to a VCS Root that is neither linked to any build configurations nor included in any build templates.
 func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 	allVCSRoots, err := vcs.GetAllVCSRootIDs()
 	if err != nil {
@@ -81,7 +81,7 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 	pool := pond.New(50, 1000) // Create a pond with 50 workers and a buffered channel of 1000 tasks.
 	defer pool.StopAndWait()
 
-	var mu sync.Mutex // To safely increment unusedCount
+	var mu sync.Mutex // Protects unusedCount during concurrent increments.
 
 	for _, vcsRoot := range allVCSRoots {
 		vcsRoot := vcsRoot // Local scope redeclaration for closure
@@ -91,7 +91,7 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 				log.Errorf("error checking if VCS root is unused: %v", err)
 				return
 			}
-
+			// Check if the VCS root not used in template
 			if isUnused {
 				isInTemplate := false
 				for _, templateID := range vcsRootTemplats {
@@ -103,7 +103,10 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 
 				if !isInTemplate {
 					mu.Lock()
-					unusedCount++ // Safe increment within the mutex
+					unusedCount++
+					if vcs.DeleteVCSRoot(vcsRoot.ID) {
+						log.Infof("%s has been deleted", vcsRoot.ID)
+					}
 					mu.Unlock()
 				}
 			}
@@ -115,7 +118,7 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 	return unusedCount, nil
 }
 
-// Checks if the VCS root have instance.
+// IsVcsRootHaveInstance checks if a VCS root has an instance.
 func (vcs *VCSRootService) IsVcsRootHaveInstance(vcsRootID string) (bool, error) {
 	vcsRootURL := fmt.Sprintf("app/rest/vcs-roots/id:%s", vcsRootID)
 	req, err := vcs.client.NewRequestWrapper("GET", vcsRootURL, nil)
@@ -171,24 +174,26 @@ func (vcs *VCSRootService) IsVcsRootHaveInstance(vcsRootID string) (bool, error)
 	return instancesResponse.Count == 0, nil
 }
 
-// DeleteVCSRoot deletes a VCS root by its ID.
-func (vcs *VCSRootService) DeleteVCSRoot(vcsRootID string) error {
+// DeleteVCSRoot removes a VCS root by its ID.
+func (vcs *VCSRootService) DeleteVCSRoot(vcsRootID string) bool {
 	vcsRootURL := fmt.Sprintf("app/rest/vcs-roots/%s", vcsRootID)
 	req, err := vcs.client.NewRequestWrapper("DELETE", vcsRootURL, nil)
 	if err != nil {
-		log.Errorf("error creating request: %v", err)
+		log.Errorf("error creating request for %v: %v", vcsRootID, err)
+		return false
 	}
 
 	response, err := vcs.client.client.Do(req)
 	if err != nil {
-		log.Errorf("error executing request to delete VCS root: %v", err)
+		log.Errorf("error executing request to delete %v: %v", vcsRootID, err)
+		return false
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
-		log.Errorf("failed to delete VCS root, status code: %d", response.StatusCode)
-		return fmt.Errorf("failed to delete VCS root, status code: %d", response.StatusCode)
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNoContent {
+		log.Errorf("failed to delete %v. status code: %d", vcsRootID, response.StatusCode)
+		return false
 	}
 
-	return nil
+	return true
 }

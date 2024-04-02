@@ -19,7 +19,7 @@ type VCSRootFromTemplateResponse struct {
 
 type TemplateService service
 
-// GetVCSRootIDsFromTemplates gets VCS root IDs from a list of template IDs.
+// GetVCSRootIDsFromTemplates retrieves VCS root IDs from given template IDs
 func (vcs *VCSRootService) GetVCSRootIDsFromTemplates(templateIDs []string) ([]string, error) {
 	vcsRootIDs := []string{}
 
@@ -53,18 +53,18 @@ func (vcs *VCSRootService) GetVCSRootIDsFromTemplates(templateIDs []string) ([]s
 	return vcsRootIDs, nil
 }
 
-// GetAllVCSRootsTemplates gets all VCS root IDs from list of all projects.
+// GetAllVCSRootsTemplates collects all VCS root IDs from a list of all project templates.
 func (vcs *VCSRootService) GetAllVCSRootsTemplates() ([]string, error) {
 	projectIDs, err := vcs.GetAllProjects()
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a pond with 50 workers and a buffered channel of 1000 tasks.
-	pool := pond.New(50, 1000)
+	pool := pond.New(50, 1000) // Create a pond with 50 workers and a buffered channel of 1000 tasks.
 	defer pool.StopAndWait()
 
-	var mu sync.Mutex
+	var mu sync.Mutex // Protects unusedCount during concurrent increments.
+
 	vcsRootTemplates := []string{}
 	var overallError error
 
