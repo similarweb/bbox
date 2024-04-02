@@ -104,9 +104,9 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 				if !isInTemplate {
 					mu.Lock()
 					unusedCount++
-					if vcs.DeleteVCSRoot(vcsRoot.ID) {
-						log.Infof("%s has been deleted", vcsRoot.ID)
-					}
+					// if vcs.DeleteVCSRoot(vcsRoot.ID) {
+					// 	log.Infof("%s has been deleted", vcsRoot.ID)
+					// }
 					mu.Unlock()
 				}
 			}
