@@ -8,6 +8,7 @@ variables:
 
 stages:
   - lint
+  - tests
   - release
 
 linters:
@@ -21,6 +22,15 @@ linters:
         - go.sum
   script:
     - golangci-lint run --new -v ./...
+  only:
+    - merge_requests
+  needs: []
+
+tests:
+  stage: tests
+  image: golang:1.22.0-alpine
+  script:
+    - go test ./... -v
   only:
     - merge_requests
   needs: []
