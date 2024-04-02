@@ -19,8 +19,6 @@ type VCSRootFromTemplateResponse struct {
 
 type TemplateService service
 
-const workerPoolSize = 50
-
 // GetVCSRootIDsFromTemplates retrieves VCS root IDs from given template IDs.
 func (vcs *VCSRootService) GetVCSRootIDsFromTemplates(templateIDs []string) ([]string, error) {
 	vcsRootIDs := []string{}
@@ -62,7 +60,7 @@ func (vcs *VCSRootService) GetAllVCSRootsTemplates() ([]string, error) {
 		return nil, err
 	}
 
-	pool := pond.New(workerPoolSize, 1000) // Create a pond with 50 workers and a buffered channel of 1000 tasks.
+	pool := pond.New(pondChannelTasksSize, pondChannelTasksSize) // Create a pond with 50 workers and a buffered channel of 1000 tasks.
 	defer pool.StopAndWait()
 
 	var mu sync.Mutex // Protects unusedCount during concurrent increments.

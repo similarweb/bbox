@@ -29,6 +29,9 @@ type VCSRootInstance struct {
 
 type VCSRootService service
 
+const pondWorkerPoolSize = 50
+const pondChannelTasksSize = 1000
+
 // GetAllVCSRootIDs retrieves all VCS root IDs, using pagination.
 func (vcs *VCSRootService) GetAllVCSRootIDs() ([]VCSRoot, error) {
 	allVCSRoots := []VCSRoot{}
@@ -78,7 +81,7 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 	}
 
 	unusedCount := 0
-	pool := pond.New(50, 1000) // Create a pond with 50 workers and a buffered channel of 1000 tasks.
+	pool := pond.New(pondWorkerPoolSize, pondChannelTasksSize) // Create a pond with 50 workers and a buffered channel of 1000 tasks.
 	defer pool.StopAndWait()
 
 	var mu sync.Mutex // Protects unusedCount during concurrent increments.
@@ -104,9 +107,9 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 				if !isInTemplate {
 					mu.Lock()
 					unusedCount++
-					// if vcs.DeleteVCSRoot(vcsRoot.ID) {
-					// 	log.Infof("%s has been deleted", vcsRoot.ID)
-					// }
+					if vcs.DeleteVCSRoot(vcsRoot.ID) {
+						log.Infof("%s has been deleted", vcsRoot.ID)
+					}
 					mu.Unlock()
 				}
 			}
