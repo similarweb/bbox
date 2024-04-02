@@ -123,6 +123,7 @@ linters:
     - depguard
     - funlen
     - lll
+    - gofumpt
 
 run:
   go: "1.20"
