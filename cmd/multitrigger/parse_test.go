@@ -2,8 +2,9 @@ package multitrigger
 
 import (
 	"bbox/pkg/types"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
