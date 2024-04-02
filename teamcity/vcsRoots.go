@@ -29,8 +29,10 @@ type VCSRootInstance struct {
 
 type VCSRootService service
 
-const pondWorkerPoolSize = 50
-const pondChannelTasksSize = 1000
+const (
+	pondWorkerPoolSize   = 50
+	pondChannelTasksSize = 1000
+)
 
 // GetAllVCSRootIDs retrieves all VCS root IDs, using pagination.
 func (vcs *VCSRootService) GetAllVCSRootIDs() ([]VCSRoot, error) {
@@ -64,7 +66,6 @@ func (vcs *VCSRootService) GetAllVCSRootIDs() ([]VCSRoot, error) {
 	}
 
 	return allVCSRoots, nil
-
 }
 
 // GetUnusedVCSRoots calculates the number of unused VCS roots.
