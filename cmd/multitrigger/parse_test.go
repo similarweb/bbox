@@ -1,12 +1,11 @@
 package multitrigger
 
 import (
-	"bbox/pkg/types"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	"bbox/pkg/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseCombinations(t *testing.T) {
