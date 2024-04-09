@@ -55,12 +55,12 @@ func (vcs *VCSRootService) GetVCSRootIDsFromTemplates(templateIDs []string) ([]s
 
 // GetAllVCSRootsTemplates collects all VCS root IDs from a list of all project templates.
 func (vcs *VCSRootService) GetAllVCSRootsTemplates() ([]string, error) {
-	projectIDs, err := vcs.GetAllProjects()
+	projectIDs, err := vcs.getAllProjects()
 	if err != nil {
 		return nil, err
 	}
 
-	pool := pond.New(pondChannelTasksSize, pondChannelTasksSize) // Create a pond with 50 workers and a buffered channel of 1000 tasks.
+	pool := pond.New(pondChannelTasksSize, pondChannelTasksSize)
 	defer pool.StopAndWait()
 
 	var mu sync.Mutex // Protects unusedCount during concurrent increments.

@@ -82,15 +82,15 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 	}
 
 	unusedCount := 0
-	pool := pond.New(pondWorkerPoolSize, pondChannelTasksSize) // Create a pond with 50 workers and a buffered channel of 1000 tasks.
+	pool := pond.New(pondWorkerPoolSize, pondChannelTasksSize)
 	defer pool.StopAndWait()
 
 	var mu sync.Mutex // Protects unusedCount during concurrent increments.
 
 	for _, vcsRoot := range allVCSRoots {
-		vcsRoot := vcsRoot // Local scope redeclaration for closure
+		localScopeVCSRoot := vcsRoot // Local scope redeclaration for closure
 		pool.Submit(func() {
-			isUnused, err := vcs.IsVcsRootHaveInstance(vcsRoot.ID)
+			isUnused, err := vcs.IsVcsRootHaveInstance(localScopeVCSRoot.ID)
 			if err != nil {
 				log.Errorf("error checking if VCS root is unused: %v", err)
 				return
@@ -99,7 +99,7 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 			if isUnused {
 				isInTemplate := false
 				for _, templateID := range vcsRootTemplats {
-					if vcsRoot.ID == templateID {
+					if localScopeVCSRoot.ID == templateID {
 						isInTemplate = true
 						break
 					}
@@ -108,8 +108,8 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 				if !isInTemplate {
 					mu.Lock()
 					unusedCount++
-					if vcs.DeleteVCSRoot(vcsRoot.ID) {
-						log.Infof("%s has been deleted", vcsRoot.ID)
+					if vcs.DeleteVCSRoot(localScopeVCSRoot.ID) {
+						log.Infof("%s has been deleted", localScopeVCSRoot.ID)
 					}
 					mu.Unlock()
 				}

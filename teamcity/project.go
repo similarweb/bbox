@@ -23,8 +23,8 @@ type TemplateResponse struct {
 
 type ProjectService service
 
-// GetAllProjects retrieves all project IDs available in TeamCity.
-func (vcs *VCSRootService) GetAllProjects() ([]string, error) {
+// getAllProjects retrieves all project IDs available in TeamCity.
+func (vcs *VCSRootService) getAllProjects() ([]string, error) {
 	projectsURL := "app/rest/projects"
 	req, err := vcs.client.NewRequestWrapper("GET", projectsURL, nil)
 	if err != nil {
