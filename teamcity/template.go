@@ -69,12 +69,12 @@ func (vcs *VCSRootService) GetAllVCSRootsTemplates() ([]string, error) {
 	var overallError error
 
 	for _, projectID := range projectIDs {
-		projectID := projectID // avoid closure capturing issues
+		localScopeProjectID := projectID
 		pool.Submit(func() {
 			if overallError != nil {
 				return
 			}
-			templateIDs, err := vcs.GetProjectTemplates(projectID)
+			templateIDs, err := vcs.GetProjectTemplates(localScopeProjectID)
 			if err != nil {
 				overallError = err
 				return
