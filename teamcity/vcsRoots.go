@@ -10,96 +10,86 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type VCSRoot struct {
+type VcsRoots struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 	Href string `json:"href"`
 }
 
-type VCSRootResponse struct {
-	Count    int       `json:"count"`
-	Href     string    `json:"href"`
-	VCSRoot  []VCSRoot `json:"vcs-root"`
-	NextHref string    `json:"nextHref"`
+type VcsRootsResponse struct {
+	Count    int        `json:"count"`
+	Href     string     `json:"href"`
+	VcsRoots []VcsRoots `json:"vcs-root"`
+	NextHref string     `json:"nextHref"`
 }
 
-type VCSRootInstance struct {
+type VcsRootInstanceResponse struct {
 	Count int `json:"count"`
 }
 
-type VCSRootService service
+type VcsRootsService service
 
 const (
-	pondWorkerPoolSize   = 50
-	pondChannelTasksSize = 1000
+	vcsRootPondWorkerPoolSize   = 50
+	vcsRootPondChannelTasksSize = 100
 )
 
-// GetAllVCSRootIDs retrieves all VCS root IDs, using pagination.
-func (vcs *VCSRootService) GetAllVCSRootIDs() ([]VCSRoot, error) {
-	allVCSRoots := []VCSRoot{}
+// GetAllVcsRootsIDs retrieves all vcs root IDs, using pagination.
+func (vcs *VcsRootsService) GetAllVcsRootsIDs() ([]VcsRoots, error) {
+	allVcsRoots := []VcsRoots{}
 	nextURL := "app/rest/vcs-roots"
 
 	for nextURL != "" {
 		req, err := vcs.client.NewRequestWrapper("GET", nextURL, nil)
 		if err != nil {
-			log.Errorf("error creating request: %v", err)
+			return allVcsRoots, fmt.Errorf("error creating request: %v", err)
 		}
 
 		response, err := vcs.client.client.Do(req)
 		if err != nil {
-			log.Errorf("error executing request to get VCS roots: %v", err)
+			return allVcsRoots, fmt.Errorf("error executing request to get vcs roots: %v", err)
 		}
 		defer response.Body.Close()
 
 		if response.StatusCode != http.StatusOK {
-			log.Errorf("failed to get VCS roots, status code: %d", response.StatusCode)
+			return allVcsRoots, fmt.Errorf("failed to get vcs roots, status code: %d", response.StatusCode)
 		}
 
-		var vcsRootResponse VCSRootResponse
-		err = json.NewDecoder(response.Body).Decode(&vcsRootResponse)
+		var currentVcsRootsResponse VcsRootsResponse
+		err = json.NewDecoder(response.Body).Decode(&currentVcsRootsResponse)
 		if err != nil {
-			log.Errorf("error decoding response body: %v", err)
+			return allVcsRoots, fmt.Errorf("error decoding response body: %v", err)
 		}
 
-		allVCSRoots = append(allVCSRoots, vcsRootResponse.VCSRoot...)
-		nextURL = vcsRootResponse.NextHref
+		allVcsRoots = append(allVcsRoots, currentVcsRootsResponse.VcsRoots...)
+		nextURL = currentVcsRootsResponse.NextHref
 	}
 
-	return allVCSRoots, nil
+	return allVcsRoots, nil
 }
 
-// GetUnusedVCSRoots calculates the number of unused VCS roots.
-// "Unused" VCS Root refers to a VCS Root that is neither linked to any build configurations nor included in any build templates.
-func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
-	allVCSRoots, err := vcs.GetAllVCSRootIDs()
-	if err != nil {
-		log.Errorf("error getting all VCS root IDs: %v", err)
-	}
-
-	vcsRootTemplats, err := vcs.GetAllVCSRootsTemplates()
-	if err != nil {
-		log.Errorf("error getting all VCS root templates: %v", err)
-	}
-
-	unusedCount := 0
-	pool := pond.New(pondWorkerPoolSize, pondChannelTasksSize)
+// GetUnusedVcsRootsIDs retrieves all unused vcs root IDs.
+// Unused vcs root refers to a vcs root that is neither linked to any build configurations nor included in any build templates.
+func (vcs *VcsRootsService) GetUnusedVcsRootsIDs(allVcsRoots []VcsRoots, allVcsRootsTemplates []string) ([]string, error) {
+	unusedVcsRoots := []string{}
+	pool := pond.New(vcsRootPondWorkerPoolSize, vcsRootPondChannelTasksSize)
 	defer pool.StopAndWait()
 
-	var mu sync.Mutex // Protects unusedCount during concurrent increments.
+	var mu sync.Mutex // Protects unusedVcsRoots slice during concurrent access.
 
-	for _, vcsRoot := range allVCSRoots {
-		localScopeVCSRoot := vcsRoot // Local scope redeclaration for closure
+	for _, vcsRoot := range allVcsRoots {
+		localVcsRoot := vcsRoot // Local scope redeclaration for closure
 		pool.Submit(func() {
-			isUnused, err := vcs.IsVcsRootHaveInstance(localScopeVCSRoot.ID)
+			isUsed, err := vcs.IsVcsRootHaveInstance(localVcsRoot.ID)
 			if err != nil {
-				log.Errorf("error checking if VCS root is unused: %v", err)
+				log.Errorf("error checking if %s has instances: %v", localVcsRoot.ID, err)
 				return
 			}
-			// Check if the VCS root not used in template
-			if isUnused {
+
+			if isUsed {
 				isInTemplate := false
-				for _, templateID := range vcsRootTemplats {
-					if localScopeVCSRoot.ID == templateID {
+				for _, templateID := range allVcsRootsTemplates {
+					if localVcsRoot.ID == templateID {
 						isInTemplate = true
 						break
 					}
@@ -107,10 +97,7 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 
 				if !isInTemplate {
 					mu.Lock()
-					unusedCount++
-					if vcs.DeleteVCSRoot(localScopeVCSRoot.ID) {
-						log.Infof("%s has been deleted", localScopeVCSRoot.ID)
-					}
+					unusedVcsRoots = append(unusedVcsRoots, localVcsRoot.ID)
 					mu.Unlock()
 				}
 			}
@@ -118,86 +105,75 @@ func (vcs *VCSRootService) GetUnusedVCSRoots() (int, error) {
 	}
 
 	pool.StopAndWait()
-
-	return unusedCount, nil
+	return unusedVcsRoots, nil
 }
 
-// IsVcsRootHaveInstance checks if a VCS root has an instance.
-func (vcs *VCSRootService) IsVcsRootHaveInstance(vcsRootID string) (bool, error) {
-	vcsRootURL := fmt.Sprintf("app/rest/vcs-roots/id:%s", vcsRootID)
-	req, err := vcs.client.NewRequestWrapper("GET", vcsRootURL, nil)
+// DeleteUnusedVcsRoots deletes all unused vcs roots.
+func (vcs *VcsRootsService) DeleteUnusedVcsRoots(allUnusedVcsRoots []string) (int, error) {
+	pool := pond.New(vcsRootPondWorkerPoolSize, vcsRootPondChannelTasksSize)
+	defer pool.StopAndWait()
+
+	for _, id := range allUnusedVcsRoots {
+		localID := id // Local scope redeclaration for closure
+		pool.Submit(func() {
+			if deleted, err := vcs.DeleteVcsRoot(localID); err == nil && deleted {
+				log.Infof("%s has been deleted", localID)
+			} else {
+				log.Errorf("error deleting %s: %v", localID, err)
+			}
+		})
+	}
+
+	pool.StopAndWait()
+	return len(allUnusedVcsRoots), nil
+}
+
+// IsVcsRootHaveInstance checks if a vcs root has an instance.
+func (vcs *VcsRootsService) IsVcsRootHaveInstance(vcsRootID string) (bool, error) {
+
+	var instancesResponse VcsRootInstanceResponse
+	// Get vcs root instances
+	instancesURL := fmt.Sprintf("app/rest/vcs-root-instances?locator=vcsRoot:(id:%s)", vcsRootID)
+	req, err := vcs.client.NewRequestWrapper("GET", instancesURL, nil)
 	if err != nil {
-		log.Errorf("error creating request: %v", err)
+		return false, fmt.Errorf("error creating request: %w", err)
 	}
 
 	response, err := vcs.client.client.Do(req)
 	if err != nil {
-		log.Errorf("error executing request to check if VCS root is unused: %v", err)
+		return false, fmt.Errorf("error executing request to get vcs root instances: %w", err)
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		log.Errorf("failed to check if VCS root is unused, status code: %d", response.StatusCode)
+		return false, fmt.Errorf("failed to get vcs root instances, status code: %d", response.StatusCode)
 	}
 
-	var unusedResponse struct {
-		Count int `json:"count"`
-	}
-	err = json.NewDecoder(response.Body).Decode(&unusedResponse)
-	if err != nil {
-		log.Errorf("error decoding response body: %v", err)
-	}
-
-	if unusedResponse.Count != 0 {
-		return false, nil // VCS root is used
-	}
-
-	// Get VCS root instances
-	instancesURL := fmt.Sprintf("app/rest/vcs-root-instances?locator=vcsRoot:(id:%s)", vcsRootID)
-	req, err = vcs.client.NewRequestWrapper("GET", instancesURL, nil)
-	if err != nil {
-		log.Errorf("error creating request: %v", err)
-	}
-
-	response, err = vcs.client.client.Do(req)
-	if err != nil {
-		log.Errorf("error executing request to get VCS root instances: %v", err)
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		log.Errorf("failed to get VCS root instances, status code: %d", response.StatusCode)
-	}
-
-	var instancesResponse VCSRootInstance
 	err = json.NewDecoder(response.Body).Decode(&instancesResponse)
 	if err != nil {
-		log.Errorf("error decoding response body: %v", err)
+		return false, fmt.Errorf("error decoding response body: %w", err)
 	}
 
-	return instancesResponse.Count == 0, nil
+	return instancesResponse.Count == 0, nil // if count is 0, then vcs root has 0 uses as a instances
 }
 
-// DeleteVCSRoot removes a VCS root by its ID.
-func (vcs *VCSRootService) DeleteVCSRoot(vcsRootID string) bool {
+// DeleteVcsRoot removes a vcs root by its ID.
+func (vcs *VcsRootsService) DeleteVcsRoot(vcsRootID string) (bool, error) {
 	vcsRootURL := fmt.Sprintf("app/rest/vcs-roots/%s", vcsRootID)
 	req, err := vcs.client.NewRequestWrapper("DELETE", vcsRootURL, nil)
 	if err != nil {
-		log.Errorf("error creating request for %v: %v", vcsRootID, err)
-		return false
+		return false, fmt.Errorf("error creating request for %v: %v", vcsRootID, err)
 	}
 
 	response, err := vcs.client.client.Do(req)
 	if err != nil {
-		log.Errorf("error executing request to delete %v: %v", vcsRootID, err)
-		return false
+		return false, fmt.Errorf("error executing request to delete %v: %v", vcsRootID, err)
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNoContent {
-		log.Errorf("failed to delete %v. status code: %d", vcsRootID, response.StatusCode)
-		return false
+		return false, fmt.Errorf("failed to delete %v. status code: %d", vcsRootID, response.StatusCode)
 	}
 
-	return true
+	return true, nil
 }

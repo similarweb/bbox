@@ -22,7 +22,7 @@ type Client struct {
 	Artifacts *ArtifactsService
 	Queue     *QueueService
 	Build     *BuildService
-	VCSRoot   *VCSRootService
+	VcsRoots  *VcsRootsService
 	Project   *ProjectService
 	Template  *TemplateService
 }
@@ -57,7 +57,7 @@ func (c *Client) initializeServices() {
 	c.Artifacts = (*ArtifactsService)(&c.common)
 	c.Queue = (*QueueService)(&c.common)
 	c.Build = (*BuildService)(&c.common)
-	c.VCSRoot = (*VCSRootService)(&c.common)
+	c.VcsRoots = (*VcsRootsService)(&c.common)
 	c.Project = (*ProjectService)(&c.common)
 	c.Template = (*TemplateService)(&c.common)
 }
