@@ -111,7 +111,7 @@ func init() {
 	triggerCmd.PersistentFlags().StringVarP(&buildTypeID, "build-type-id", "i", "", "The Build Type")
 	triggerCmd.PersistentFlags().StringVar(&artifactsPath, "artifacts-path", artifactsPath, "Path to download Artifacts to")
 	triggerCmd.PersistentFlags().BoolVarP(&waitForBuild, "wait-for-build", "w", waitForBuild, "Wait for build to finish and get status")
-	triggerCmd.PersistentFlags().DurationVarP(&waitForBuildTimeout, "wait-timeout", "t", waitForBuildTimeout, "Timeout for waiting for build to finish, default is 15 minutes")
+	triggerCmd.PersistentFlags().DurationVarP(&waitForBuildTimeout, "wait-timeout", "t", waitForBuildTimeout, "Timeout for waiting for build to finish")
 	triggerCmd.PersistentFlags().BoolVarP(&downloadArtifacts, "download-artifacts", "d", downloadArtifacts, "Download Artifacts")
 	triggerCmd.PersistentFlags().StringVarP(&branchName, "branch-name", "b", branchName, "The Branch Name")
 	triggerCmd.PersistentFlags().StringToStringVarP(&propertiesFlag, "properties", "p", nil, "The properties in key=value format")
