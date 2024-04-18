@@ -64,7 +64,9 @@ type RequestOption func(req *http.Request)
 // A relative URL can be provided in urlStr, in which case it is resolved relative to the BaseURL of the Client.
 func (c *Client) NewRequestWrapper(method, urlStr string, body interface{}, opts ...RequestOption) (*http.Request, error) {
 	if !strings.HasSuffix(c.baseURL.Path, "/") {
-		return nil, fmt.Errorf("BaseURL must have a trailing slash, but %v does not", c.baseURL)
+		// add trailing slash to baseURL
+		c.baseURL.Path += "/"
+		// return nil, fmt.Errorf("BaseURL must have a trailing slash, but %v does not", c.baseURL)
 	}
 
 	u, err := c.baseURL.Parse(urlStr)
