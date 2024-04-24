@@ -2,77 +2,11 @@ package cmd
 
 import (
 	"bbox/pkg/types"
+	"bbox/pkg/utils/testutils"
 	"bbox/teamcity"
-	"net/http"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/mock"
 )
-
-// MockTeamCityClient implements the interfaces used by the Build and Artifacts services.
-type MockTeamCityClient struct {
-	mock.Mock
-	Build     teamcity.IBuildService
-	Artifacts teamcity.IArtifactsService
-}
-
-func (m *MockTeamCityClient) NewRequestWrapper(method, urlStr string, body interface{}, opts ...teamcity.RequestOption) (*http.Request, error) {
-	args := m.Called(method, urlStr, body, opts)
-	return args.Get(0).(*http.Request), args.Error(1)
-}
-
-type MockBuildService struct {
-	mock.Mock
-}
-
-func (m *MockBuildService) WaitForBuild(buildName string, buildNumber int, timeout time.Duration) (types.BuildStatusResponse, error) {
-	args := m.Called(buildName, buildNumber, timeout)
-	// call GetBuildStatus to simulate the build finishing
-	m.GetBuildStatus(buildNumber)
-	return args.Get(0).(types.BuildStatusResponse), args.Error(1)
-}
-
-func (m *MockBuildService) TriggerBuild(buildTypeID, branchName string, params map[string]string) (types.TriggerBuildWithParametersResponse, error) {
-	args := m.Called(buildTypeID, branchName, params)
-	return args.Get(0).(types.TriggerBuildWithParametersResponse), args.Error(1)
-}
-
-func (m *MockBuildService) GetBuildStatus(buildID int) (types.BuildStatusResponse, error) {
-	args := m.Called(buildID)
-	return args.Get(0).(types.BuildStatusResponse), args.Error(1)
-}
-
-type MockArtifactsService struct {
-	mock.Mock
-}
-
-func (m *MockArtifactsService) GetAllBuildTypeArtifacts(buildID int, buildTypeID string) ([]byte, error) {
-	args := m.Called(buildID, buildTypeID)
-	return args.Get(0).([]byte), args.Error(1)
-}
-
-func (m *MockArtifactsService) BuildHasArtifact(buildID int) bool {
-	args := m.Called(buildID)
-	m.GetArtifactChildren(buildID)
-	return args.Bool(0)
-}
-
-func (m *MockArtifactsService) GetArtifactChildren(buildID int) (types.ArtifactChildren, error) {
-	args := m.Called(buildID)
-	return args.Get(0).(types.ArtifactChildren), args.Error(1)
-}
-
-func (m *MockArtifactsService) GetArtifactContentByPath(path string) ([]byte, error) {
-	args := m.Called(path)
-	return args.Get(0).([]byte), args.Error(1)
-}
-
-func (m *MockArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeID, destPath string) error {
-	args := m.Called(buildID, buildTypeID, destPath)
-	m.GetAllBuildTypeArtifacts(buildID, buildTypeID)
-	return args.Error(0)
-}
 
 func TestTrigger(t *testing.T) {
 	tests := []struct {
@@ -159,8 +93,8 @@ func TestTrigger(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockBuild := new(MockBuildService)
-			mockArtifacts := new(MockArtifactsService)
+			mockBuild := new(testutils.MockBuildService)
+			mockArtifacts := new(testutils.MockArtifactsService)
 
 			client := &teamcity.Client{
 				Build:     mockBuild,

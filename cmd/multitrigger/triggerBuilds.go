@@ -91,7 +91,7 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 				}).Infof("build %s finished", triggerResponse.BuildType.Name)
 
 				if p.DownloadArtifacts && status == "SUCCESS" {
-					downloadedArtifacts, err = handleArtifacts(c, build.ID, p.BuildTypeID, triggerResponse.BuildType.Name)
+					downloadedArtifacts, err = handleArtifacts(c, build.ID, p.BuildTypeID, triggerResponse.BuildType.Name, multiArtifactsPath)
 					if err != nil {
 						log.Errorf("error handling artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 
@@ -144,12 +144,12 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 
 // handleArtifacts handles the artifacts logic for a build, downloading and unzipping them if needed.
 // Returns true if artifacts were downloaded, false otherwise.
-func handleArtifacts(c *teamcity.Client, buildID int, buildTypeID, buildTypeName string) (bool, error) {
+func handleArtifacts(c *teamcity.Client, buildID int, buildTypeID, buildTypeName, artifactsPath string) (bool, error) {
 	// if we have artifacts, download them
 	if c.Artifacts.BuildHasArtifact(buildID) {
 		log.Infof("downloading Artifacts for %s", buildTypeName)
 
-		err := c.Artifacts.DownloadAndUnzipArtifacts(buildID, buildTypeID, multiArtifactsPath)
+		err := c.Artifacts.DownloadAndUnzipArtifacts(buildID, buildTypeID, artifactsPath)
 		if err != nil {
 			log.Errorf("error downloading artifacts for build %s: %s", buildTypeName, err.Error())
 			return false, fmt.Errorf("error downloading artifacts: %w", err)
