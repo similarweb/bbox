@@ -67,8 +67,9 @@ var vcsRootsCmd = &cobra.Command{
 			}
 			logger.Infof("%d unused VCS roots have been deleted.", numberOfDeletedVcsRoots)
 		} else {
-			model := models.ConfirmModel{
-				UnusedVcsRoots: allUnusedVcsRoots,
+			model := models.UnusedVcsRootsModel{
+				ActionModel: models.NewConfirmActionModel(),
+				ListModel:   models.NewListModel(allUnusedVcsRoots),
 			}
 			p := tea.NewProgram(model)
 			activeModel, err := p.Run()
@@ -76,7 +77,7 @@ var vcsRootsCmd = &cobra.Command{
 				log.Fatal("error while trying to start the program: ", err)
 			}
 
-			confirmedModel, ok := activeModel.(models.ConfirmModel)
+			confirmedModel, ok := activeModel.(models.UnusedVcsRootsModel)
 			if !ok {
 				log.Fatal("could not cast final model to ConfirmModel")
 			}
