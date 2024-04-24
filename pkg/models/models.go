@@ -81,8 +81,10 @@ func (m ListModel) Update(msg tea.Msg) (ListModel, tea.Cmd) {
 		if m.Cursor < len(m.UnusedVcsRoots)-1 {
 			m.Cursor++
 		}
+
 		return m, nil
 	}
+
 	return m, nil
 }
 
