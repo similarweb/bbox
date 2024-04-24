@@ -113,6 +113,15 @@ go run main.go multi-trigger \
     --build-params-combination "<BuildIDType>;<Brnach>;<Properties key=value,key=value>" \
 ```
 
+### Clean Vcs-Roots
+Delete all unused vcs-roots. Unused vcs-root refers to a vcs-root that is neither linked to any build configurations nor included in any build templates.
+
+```sh
+go run main.go clean vcs \
+    --teamcity-username "<Username>" \
+    --teamcity-password '<Password>' \
+```
+
 ## Support
 Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
 

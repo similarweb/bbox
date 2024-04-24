@@ -68,7 +68,7 @@ var vcsRootsCmd = &cobra.Command{
 			}
 			logger.Infof("%d unused VCS roots have been deleted.", numberOfDeletedVcsRoots)
 		} else {
-			listMsg := fmt.Sprintf("There are %d unused VCS roots. The following vcs roots will be deleted permanently:", len(allUnusedVcsRoots))
+			listMsg := fmt.Sprintf("There are %d unused vcs roots. Do you want to delete the following vcs roots permanently:", len(allUnusedVcsRoots))
 
 			model := models.UnusedVcsRootsModel{
 				ActionModel: models.NewConfirmActionModel(),
@@ -102,6 +102,6 @@ var vcsRootsCmd = &cobra.Command{
 }
 
 func init() {
-	vcsRootsCmd.Flags().BoolVarP(&autoDelete, "auto", "a", false, "Automatically delete all unused VCS roots without confirmation")
+	vcsRootsCmd.Flags().BoolVarP(&autoDelete, "confirm", "c", false, "Automatically confirm to delete all unused VCS roots without prompting the user.")
 	Cmd.AddCommand(vcsRootsCmd)
 }
