@@ -55,3 +55,45 @@ func TestGetBuildStatus(t *testing.T) {
 	assert.Equal(t, "SUCCESS", buildStatus.State)
 	assert.Equal(t, "Completed", buildStatus.Status)
 }
+
+//package teamcity
+//
+//import (
+//	"bbox/pkg/utils/testutils"
+//	"bytes"
+//	"io/ioutil"
+//	"net/http"
+//	"net/url"
+//	"testing"
+//
+//	"github.com/stretchr/testify/assert"
+//	"github.com/stretchr/testify/mock"
+//)
+//
+//func TestGetBuildStatus(t *testing.T) {
+//	// Create an instance of the mock HTTP client
+//	mockHttp := new(testutils.MockHttpClient)
+//	client := &Client{
+//		baseURL:   &url.URL{Scheme: "http", Host: "example.com"},
+//		client:    mockHttp,
+//		BasicAuth: &BasicAuth{username: "user", password: "pass"},
+//	}
+//
+//	bs := &BuildService{client: client}
+//
+//	// Setup the mock expectations
+//	mockResp := &http.Response{
+//		StatusCode: http.StatusOK,
+//		Body:       ioutil.NopCloser(bytes.NewBufferString(`{"status": "SUCCESS", "state": "finished"}`)),
+//	}
+//	mockHttp.On("Do", mock.AnythingOfType("*http.Request")).Return(mockResp, nil)
+//
+//	// Call the method
+//	result, err := bs.GetBuildStatus(123)
+//
+//	// Assertions
+//	assert.NoError(t, err)
+//	assert.NotNil(t, result)
+//	assert.Equal(t, "SUCCESS", result.Status)
+//	mockHttp.AssertExpectations(t) // Verify that the expectations were met
+//}

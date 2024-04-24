@@ -9,7 +9,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type QueueService service
+type IQueueService interface {
+	ClearQueue() error
+}
+
+//var _ IQueueService = &QueueService{}
+
+type QueueService struct {
+	client *Client
+}
 
 // ClearQueue cancels all queued builds in TeamCity using the REST API.
 func (qs *QueueService) ClearQueue() error {

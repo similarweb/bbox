@@ -2,10 +2,24 @@ package testutils
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/mock"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 )
+
+type HttpClientInterface interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+type MockHttpClient struct {
+	mock.Mock
+}
+
+func (m *MockHttpClient) Do(req *http.Request) (*http.Response, error) {
+	args := m.Called(req)
+	return args.Get(0).(*http.Response), args.Error(1)
+}
 
 // SetupMockServer initializes a mock server with configurable endpoints.
 func SetupMockServer(config MockServerConfig) (*httptest.Server, *url.URL) {

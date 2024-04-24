@@ -14,7 +14,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type BuildService service
+// todo - move this to tc
+
+// IBuildService defines the interface for build operations in TeamCity.
+type IBuildService interface {
+	GetBuildStatus(buildID int) (types.BuildStatusResponse, error)
+	TriggerBuild(buildTypeID, branchName string, params map[string]string) (types.TriggerBuildWithParametersResponse, error)
+	WaitForBuild(buildName string, buildNumber int, timeout time.Duration) (types.BuildStatusResponse, error)
+}
+
+// var _ IBuildService = &BuildService{}
+
+type BuildService struct {
+	client *Client
+}
 
 // GetBuildStatus returns the status of a build.
 func (bs *BuildService) GetBuildStatus(buildID int) (types.BuildStatusResponse, error) {

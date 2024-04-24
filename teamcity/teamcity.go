@@ -4,12 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+)
 
-	log "github.com/sirupsen/logrus"
+var (
+	_ IArtifactsService = &ArtifactsService{}
+	_ IQueueService     = &QueueService{}
+	_ IBuildService     = &BuildService{}
 )
 
 type Client struct {
@@ -19,9 +24,9 @@ type Client struct {
 
 	common service
 	// Services of Teamcity
-	Artifacts *ArtifactsService
-	Queue     *QueueService
-	Build     *BuildService
+	Artifacts IArtifactsService
+	Queue     IQueueService
+	Build     IBuildService
 }
 
 type BasicAuth struct {
@@ -49,11 +54,27 @@ func NewTeamCityClient(baseURL *url.URL, username, password string) *Client {
 	return newClient
 }
 
+//
+//// NewTeamCityClient creates a new TeamCity client with dependencies injected.
+//func NewTeamCityClient(baseURL *url.URL, username, password string, httpClient *http.Client, artifacts IArtifactsService, queue IQueueService, build IBuildService) *Client {
+//	if httpClient == nil {
+//		httpClient = &http.Client{} // Default to http.Client if none provided
+//	}
+//	return &Client{
+//		baseURL:   baseURL,
+//		client:    httpClient,
+//		BasicAuth: &BasicAuth{username: username, password: password},
+//		Artifacts: artifacts,
+//		Queue:     queue,
+//		Build:     build,
+//	}
+//}
+
 func (c *Client) initializeServices() {
 	c.common.client = c
-	c.Artifacts = (*ArtifactsService)(&c.common)
-	c.Queue = (*QueueService)(&c.common)
-	c.Build = (*BuildService)(&c.common)
+	c.Artifacts = &ArtifactsService{client: c}
+	c.Queue = &QueueService{client: c}
+	c.Build = &BuildService{client: c}
 }
 
 // RequestOption represents an option that can modify an http.Request.
