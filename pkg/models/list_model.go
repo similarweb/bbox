@@ -22,7 +22,6 @@ func NewListModel(vcsRoots []string, listMsg string) ListModel {
 }
 
 func (m ListModel) Init() tea.Cmd {
-
 	return nil
 }
 
