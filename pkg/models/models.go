@@ -38,7 +38,7 @@ func (m ConfirmActionModel) Update(msg tea.Msg) (ConfirmActionModel, tea.Cmd) {
 }
 
 func (m ConfirmActionModel) View() string {
-	return "Press 'y' to confirm, 'n' to cancel, or 'q' to quit."
+	return "Press 'y' to confirm, 'n' to cancel, or 'q' to quit.\n"
 }
 
 func (m ConfirmActionModel) IsConfirmed() bool {
@@ -48,12 +48,14 @@ func (m ConfirmActionModel) IsConfirmed() bool {
 // ListModel handles listing and navigation.
 type ListModel struct {
 	UnusedVcsRoots []string
+	ListMsg        string
 	Cursor         int
 }
 
-func NewListModel(vcsRoots []string) ListModel {
+func NewListModel(vcsRoots []string, listMsg string) ListModel {
 	return ListModel{
 		UnusedVcsRoots: vcsRoots,
+		ListMsg:        listMsg,
 		Cursor:         0,
 	}
 }
@@ -63,22 +65,29 @@ func (m ListModel) Init() tea.Cmd {
 }
 
 func (m ListModel) Update(msg tea.Msg) (ListModel, tea.Cmd) {
-	if keyMsg, ok := msg.(tea.KeyMsg); ok {
-		if keyMsg.String() == "up" || keyMsg.String() == "k" {
-			if m.Cursor > 0 {
-				m.Cursor--
-			}
-		} else if keyMsg.String() == "down" || keyMsg.String() == "j" {
-			if m.Cursor < len(m.UnusedVcsRoots)-1 {
-				m.Cursor++
-			}
+	keyMsg, ok := msg.(tea.KeyMsg)
+	if !ok {
+		return m, nil // Early return if msg is not a KeyMsg
+	}
+
+	if keyMsg.String() == "up" || keyMsg.String() == "k" {
+		if m.Cursor > 0 {
+			m.Cursor--
 		}
+		return m, nil
+	}
+
+	if keyMsg.String() == "down" || keyMsg.String() == "j" {
+		if m.Cursor < len(m.UnusedVcsRoots)-1 {
+			m.Cursor++
+		}
+		return m, nil
 	}
 	return m, nil
 }
 
 func (m ListModel) View() string {
-	s := "The list contains the following objects:\n"
+	s := "\n" + m.ListMsg + "\n\n"
 	for i, vcsRoot := range m.UnusedVcsRoots {
 		cursor := " "
 		if m.Cursor == i {
@@ -95,10 +104,10 @@ type UnusedVcsRootsModel struct {
 	ListModel   ListModel
 }
 
-func NewUnusedVcsRootsModel(vcsRoots []string) UnusedVcsRootsModel {
+func NewUnusedVcsRootsModel(vcsRoots []string, listMsg string) UnusedVcsRootsModel {
 	return UnusedVcsRootsModel{
 		ActionModel: NewConfirmActionModel(),
-		ListModel:   NewListModel(vcsRoots),
+		ListModel:   NewListModel(vcsRoots, listMsg),
 	}
 }
 

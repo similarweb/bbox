@@ -3,6 +3,7 @@ package clean
 import (
 	"bbox/pkg/models"
 	"bbox/teamcity"
+	"fmt"
 	"net/url"
 	"os"
 
@@ -67,9 +68,11 @@ var vcsRootsCmd = &cobra.Command{
 			}
 			logger.Infof("%d unused VCS roots have been deleted.", numberOfDeletedVcsRoots)
 		} else {
+			listMsg := fmt.Sprintf("There are %d unused VCS roots. The following vcs roots will be deleted permanently:", len(allUnusedVcsRoots))
+
 			model := models.UnusedVcsRootsModel{
 				ActionModel: models.NewConfirmActionModel(),
-				ListModel:   models.NewListModel(allUnusedVcsRoots),
+				ListModel:   models.NewListModel(allUnusedVcsRoots, listMsg),
 			}
 			p := tea.NewProgram(model)
 			activeModel, err := p.Run()
@@ -84,12 +87,12 @@ var vcsRootsCmd = &cobra.Command{
 
 			if confirmedModel.IsConfirmed() {
 				logger.Info("deleting all unused VCS roots")
-				// numberOfDeletedVcsRoots, err := client.VcsRoots.DeleteUnusedVcsRoots(allUnusedVcsRoots)
-				// if err != nil {
-				// 	log.Errorf("Error while trying to delete unused VCS roots: %v", err)
-				// 	return
-				// }
-				// logger.Infof("%d unused VCS roots have been deleted.", numberOfDeletedVcsRoots)
+				numberOfDeletedVcsRoots, err := client.VcsRoots.DeleteUnusedVcsRoots(allUnusedVcsRoots)
+				if err != nil {
+					log.Errorf("Error while trying to delete unused VCS roots: %v", err)
+					return
+				}
+				logger.Infof("%d unused VCS roots have been deleted.", numberOfDeletedVcsRoots)
 			} else {
 				logger.Info("deletion cancelled by the user.")
 			}
