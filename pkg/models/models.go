@@ -25,15 +25,14 @@ func (m ConfirmActionModel) Init() tea.Cmd {
 }
 
 func (m ConfirmActionModel) Update(msg tea.Msg) (ConfirmActionModel, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "y":
+	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg.String() == "y" {
 			m.Confirmed = true
 			m.Quitting = true
-		case "n", "q", "ctrl+c":
+		} else if keyMsg.String() == "n" || keyMsg.String() == "q" || keyMsg.String() == "ctrl+c" {
 			m.Quitting = true
 		}
+
 	}
 	return m, nil
 }
@@ -46,7 +45,7 @@ func (m ConfirmActionModel) IsConfirmed() bool {
 	return m.Confirmed
 }
 
-// ListModel handles listing and navigation
+// ListModel handles listing and navigation.
 type ListModel struct {
 	UnusedVcsRoots []string
 	Cursor         int
@@ -64,14 +63,12 @@ func (m ListModel) Init() tea.Cmd {
 }
 
 func (m ListModel) Update(msg tea.Msg) (ListModel, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "up", "k":
+	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg.String() == "up" || keyMsg.String() == "k" {
 			if m.Cursor > 0 {
 				m.Cursor--
 			}
-		case "down", "j":
+		} else if keyMsg.String() == "down" || keyMsg.String() == "j" {
 			if m.Cursor < len(m.UnusedVcsRoots)-1 {
 				m.Cursor++
 			}
@@ -81,7 +78,7 @@ func (m ListModel) Update(msg tea.Msg) (ListModel, tea.Cmd) {
 }
 
 func (m ListModel) View() string {
-	s := "The list contains the following objects:\n" //-----------------------------------------------------
+	s := "The list contains the following objects:\n"
 	for i, vcsRoot := range m.UnusedVcsRoots {
 		cursor := " "
 		if m.Cursor == i {
@@ -111,22 +108,23 @@ func (m UnusedVcsRootsModel) Init() tea.Cmd {
 
 func (m UnusedVcsRootsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+
 	if m.ActionModel.Quitting {
 		return m, nil
 	}
 
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if msg.String() == "y" || msg.String() == "n" || msg.String() == "q" || msg.String() == "ctrl+c" {
-			m.ActionModel, cmd = m.ActionModel.Update(msg)
+	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg.String() == "y" || keyMsg.String() == "n" || keyMsg.String() == "q" || keyMsg.String() == "ctrl+c" {
+			m.ActionModel, cmd = m.ActionModel.Update(keyMsg)
 		} else {
-			m.ListModel, cmd = m.ListModel.Update(msg)
+			m.ListModel, cmd = m.ListModel.Update(keyMsg)
 		}
 	}
 
 	if m.ActionModel.Quitting {
 		return m, tea.Quit
 	}
+
 	return m, cmd
 }
 
@@ -134,10 +132,11 @@ func (m UnusedVcsRootsModel) View() string {
 	if m.ActionModel.Quitting {
 		return "Operation complete. Exiting..."
 	}
-	// Combine views from both models
+
 	return m.ListModel.View() + "\n" + m.ActionModel.View()
 }
 
 func (m UnusedVcsRootsModel) IsConfirmed() bool {
+
 	return m.ActionModel.IsConfirmed()
 }
