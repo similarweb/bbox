@@ -22,6 +22,7 @@ func NewListModel(vcsRoots []string, listMsg string) ListModel {
 }
 
 func (m ListModel) Init() tea.Cmd {
+
 	return nil
 }
 
@@ -41,11 +42,13 @@ func (m ListModel) Update(msg tea.Msg) (ListModel, tea.Cmd) {
 			m.Cursor++
 		}
 	}
+
 	return m, nil
 }
 
 func (m ListModel) View() string {
 	s := "\n" + m.ListMsg + "\n\n"
+
 	for i, vcsRoot := range m.UnusedVcsRoots {
 		cursor := " "
 		if m.Cursor == i {
@@ -53,5 +56,6 @@ func (m ListModel) View() string {
 		}
 		s += fmt.Sprintf("%s %s\n", cursor, vcsRoot)
 	}
+
 	return s
 }
