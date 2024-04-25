@@ -105,7 +105,7 @@ func (bs *BuildService) TriggerBuild(buildTypeID, branchName string, params map[
 	err = json.NewDecoder(resp.Body).Decode(&triggerBuildResponse)
 	if err != nil {
 		log.Error("error reading response body:", err)
-		return types.TriggerBuildWithParametersResponse{}, nil
+		return types.TriggerBuildWithParametersResponse{}, fmt.Errorf("error reading response body: %w", err)
 	}
 
 	log.WithFields(log.Fields{
