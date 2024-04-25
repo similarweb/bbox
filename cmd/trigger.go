@@ -37,7 +37,11 @@ var triggerCmd = &cobra.Command{
 		}
 
 		log.Debugf("initializing TeamCity Client for %s", url.String())
-		client := teamcity.NewTeamCityClient(url, TeamcityUsername, TeamcityPassword)
+		client, err := teamcity.NewTeamCityClient(url, TeamcityUsername, TeamcityPassword)
+		if err != nil {
+			log.Errorf("error initializing TeamCity Client: %s", err)
+			os.Exit(2)
+		}
 		trigger(client, buildTypeID, branchName, artifactsPath, propertiesFlag, requireArtifacts, waitForBuild, downloadArtifacts, waitForBuildTimeout)
 	},
 }

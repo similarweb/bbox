@@ -3,6 +3,7 @@ package teamcity
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -39,7 +40,10 @@ type service struct {
 }
 
 // NewTeamCityClient creates a new TeamCity client.
-func NewTeamCityClient(baseURL *url.URL, username, password string) *Client {
+func NewTeamCityClient(baseURL *url.URL, username, password string) (*Client, error) {
+	if baseURL == nil || baseURL.String() == "" {
+		return nil, errors.New("teamcity-url is required - please provide a valid URL via flag or environment variable")
+	}
 	newClient := &Client{
 		baseURL: baseURL,
 		BasicAuth: &BasicAuth{
@@ -51,7 +55,7 @@ func NewTeamCityClient(baseURL *url.URL, username, password string) *Client {
 
 	newClient.initializeServices()
 
-	return newClient
+	return newClient, nil
 }
 
 //

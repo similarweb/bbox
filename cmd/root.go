@@ -9,18 +9,17 @@ import (
 	"bbox/cmd/clean"
 	"bbox/cmd/multitrigger"
 	"bbox/logger"
-
 	"github.com/spf13/cobra"
 )
 
 var (
-	logLevel    = "info"
-	TeamcityURL = "https://teamcity.similarweb.io/"
+	logLevel = "info"
 )
 
 var (
 	TeamcityUsername string
 	TeamcityPassword string
+	TeamcityURL      string
 )
 
 // RootCmd represents the base command  called without any subcommands.
@@ -47,7 +46,8 @@ func init() {
 	// TeamCity authentication
 	RootCmd.PersistentFlags().StringVar(&TeamcityUsername, "teamcity-username", "", "Teamcity username")
 	RootCmd.PersistentFlags().StringVar(&TeamcityPassword, "teamcity-password", "", "Teamcity password")
-	RootCmd.PersistentFlags().StringVar(&TeamcityURL, "teamcity-url", TeamcityURL, "Teamcity URL")
+	// get the TeamCity URL from environment variable if exists
+	RootCmd.PersistentFlags().StringVar(&TeamcityURL, "teamcity-url", os.Getenv("BBOX_TEAMCITY_URL"), "Teamcity URL")
 	RootCmd.MarkFlagsRequiredTogether("teamcity-username", "teamcity-password")
 	RootCmd.AddCommand(clean.Cmd)
 	RootCmd.AddCommand(multitrigger.Cmd)

@@ -25,7 +25,13 @@ var queueCmd = &cobra.Command{
 			os.Exit(2)
 		}
 
-		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
+		client, err := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
+
+		if err != nil {
+			log.Errorf("error initializing TeamCity Client: %s", err)
+			os.Exit(2)
+		}
+
 		logger := log.WithField("teamcityURL", url.String())
 
 		logger.Info("going to clear the TeamCity queue.")
