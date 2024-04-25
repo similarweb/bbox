@@ -6,15 +6,15 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"os"
 	"sync"
 	"time"
 )
 
 // triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group.
-func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string, requireArtifacts bool) {
+func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitForBuilds bool, waitTimeout time.Duration, multiArtifactsPath string, requireArtifacts bool) error {
 	flowFailed := false
 	resultsChan := make(chan types.BuildResult, len(parameters))
+	errorChan := make(chan error, len(parameters))
 
 	var wg sync.WaitGroup
 
@@ -41,6 +41,8 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 				log.Error("error triggering build: ", err)
 
 				flowFailed = true
+
+				errorChan <- fmt.Errorf("error triggering build: %w", err)
 
 				resultsChan <- types.BuildResult{
 					BuildName:           p.BuildTypeID,
@@ -71,6 +73,8 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 
 					flowFailed = true
 
+					errorChan <- fmt.Errorf("error waiting for build: %w", err)
+
 					resultsChan <- types.BuildResult{
 						BuildName:           triggerResponse.BuildType.Name,
 						WebURL:              triggerResponse.WebURL,
@@ -96,6 +100,8 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 						log.Errorf("error handling artifacts for build %s: %s", triggerResponse.BuildType.Name, err.Error())
 
 						flowFailed = true
+
+						errorChan <- fmt.Errorf("error handling artifacts: %w", err)
 
 						resultsChan <- types.BuildResult{
 							BuildName:           triggerResponse.BuildType.Name,
@@ -126,6 +132,7 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 
 	wg.Wait()
 	close(resultsChan)
+	close(errorChan)
 
 	var results []types.BuildResult
 	for result := range resultsChan {
@@ -136,10 +143,13 @@ func triggerBuilds(c *teamcity.Client, parameters []types.BuildParameters, waitF
 
 	if flowFailed {
 		log.Error("one or more builds failed, more info in table")
-		os.Exit(2)
+		// return the error from the channel
+		return <-errorChan
 	}
 
 	log.Debugf("all builds finished successfully")
+
+	return nil
 }
 
 // handleArtifacts handles the artifacts logic for a build, downloading and unzipping them if needed.

@@ -43,7 +43,12 @@ var Cmd = &cobra.Command{
 
 		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
 
-		triggerBuilds(client, allCombinations, waitForBuilds, waitTimeout, multiArtifactsPath, requireArtifacts)
+		err = triggerBuilds(client, allCombinations, waitForBuilds, waitTimeout, multiArtifactsPath, requireArtifacts)
+
+		if err != nil {
+			log.Errorf("trigger builds failed: %v", err)
+			os.Exit(2)
+		}
 	},
 }
 
