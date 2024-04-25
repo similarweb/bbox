@@ -91,6 +91,13 @@ func TestParseCombinations(t *testing.T) {
 			},
 			expectedError: "invalid property format",
 		},
+		{
+			name: "invalid combination format",
+			combinations: []string{
+				"projectID;main;true",
+			},
+			expectedError: "invalid combination format",
+		},
 	}
 
 	for _, tc := range testCases {
