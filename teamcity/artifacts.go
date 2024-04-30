@@ -23,8 +23,6 @@ type IArtifactsService interface {
 	DownloadAndUnzipArtifacts(buildID int, buildTypeID, destPath string) error
 }
 
-//var _ IArtifactsService = &ArtifactsService{}
-
 type ArtifactsService struct {
 	client *Client
 }

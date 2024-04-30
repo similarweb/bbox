@@ -26,7 +26,7 @@ type MockBuildService struct {
 
 func (m *MockBuildService) WaitForBuild(buildName string, buildNumber int, timeout time.Duration) (types.BuildStatusResponse, error) {
 	args := m.Called(buildName, buildNumber, timeout)
-	// call GetBuildStatus to simulate the build finishing
+
 	_, err := m.GetBuildStatus(buildNumber)
 	if err != nil {
 		return types.BuildStatusResponse{}, err

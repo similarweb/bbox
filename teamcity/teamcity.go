@@ -58,22 +58,6 @@ func NewTeamCityClient(baseURL *url.URL, username, password string) (*Client, er
 	return newClient, nil
 }
 
-//
-//// NewTeamCityClient creates a new TeamCity client with dependencies injected.
-//func NewTeamCityClient(baseURL *url.URL, username, password string, httpClient *http.Client, artifacts IArtifactsService, queue IQueueService, build IBuildService) *Client {
-//	if httpClient == nil {
-//		httpClient = &http.Client{} // Default to http.Client if none provided
-//	}
-//	return &Client{
-//		baseURL:   baseURL,
-//		client:    httpClient,
-//		BasicAuth: &BasicAuth{username: username, password: password},
-//		Artifacts: artifacts,
-//		Queue:     queue,
-//		Build:     build,
-//	}
-//}
-
 func (c *Client) initializeServices() {
 	c.common.client = c
 	c.Artifacts = &ArtifactsService{client: c}
@@ -91,7 +75,6 @@ func (c *Client) NewRequestWrapper(method, urlStr string, body interface{}, opts
 	if !strings.HasSuffix(c.baseURL.Path, "/") {
 		// add trailing slash to baseURL
 		c.baseURL.Path += "/"
-		// return nil, fmt.Errorf("BaseURL must have a trailing slash, but %v does not", c.baseURL)
 	}
 
 	u, err := c.baseURL.Parse(urlStr)

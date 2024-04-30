@@ -13,8 +13,6 @@ type IQueueService interface {
 	ClearQueue() error
 }
 
-//var _ IQueueService = &QueueService{}
-
 type QueueService struct {
 	client *Client
 }

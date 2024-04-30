@@ -269,7 +269,6 @@ func TestTriggerBuilds(t *testing.T) {
 			multiArtifactsPath: "artifacts/",
 			requireArtifacts:   false,
 			expectedResults:    []types.BuildResult{},
-			//exitError:          errors.New("error handling artifacts: build requires artifacts and did not produce any"),
 			buildsTriggered: []buildTestCase{
 				{
 					parameters: types.BuildParameters{
@@ -286,12 +285,11 @@ func TestTriggerBuilds(t *testing.T) {
 							Name: "failedWait",
 						},
 					},
-					triggerShouldFail: false,
-					triggerError:      nil,
-					waitError:         nil,
-					expectedWait:      types.BuildStatusResponse{ID: 123456, Status: "SUCCESS", State: "finished"},
-					waitShouldFail:    false,
-					//downloadError:             errors.New("this is a test error"),
+					triggerShouldFail:         false,
+					triggerError:              nil,
+					waitError:                 nil,
+					expectedWait:              types.BuildStatusResponse{ID: 123456, Status: "SUCCESS", State: "finished"},
+					waitShouldFail:            false,
 					expectedBuildHasArtifacts: false,
 				},
 			},
@@ -309,7 +307,6 @@ func TestTriggerBuilds(t *testing.T) {
 
 			var parameters []types.BuildParameters
 
-			// Mocking the Build service
 			for _, build := range tc.buildsTriggered {
 				parameters = append(parameters, build.parameters)
 				mockBuildService.On("TriggerBuild", build.parameters.BuildTypeID, build.parameters.BranchName, build.parameters.PropertiesFlag).Return(build.expectedTrigger, build.triggerError)
@@ -327,10 +324,8 @@ func TestTriggerBuilds(t *testing.T) {
 				}
 			}
 
-			// Call the function
 			err := triggerBuilds(client, parameters, tc.waitForBuilds, tc.waitTimeout, tc.multiArtifactsPath, tc.requireArtifacts)
 
-			// assert error
 			if tc.exitError != nil {
 				assert.EqualError(t, err, tc.exitError.Error())
 			} else {
@@ -338,7 +333,6 @@ func TestTriggerBuilds(t *testing.T) {
 
 			}
 
-			// Verify all expectations
 			mockBuildService.AssertExpectations(t)
 			mockArtifactsService.AssertExpectations(t)
 		})
