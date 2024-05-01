@@ -130,7 +130,6 @@ func (vcs *VcsRootsService) DeleteUnusedVcsRoots(allUnusedVcsRoots []string) (in
 
 // IsVcsRootHaveInstance checks if a VCS Root has an instance.
 func (vcs *VcsRootsService) IsVcsRootHaveInstance(vcsRootID string) (bool, error) {
-
 	var instancesResponse VcsRootInstanceResponse
 	// Get VCS Root instances
 	instancesURL := fmt.Sprintf("app/rest/vcs-root-instances?locator=vcsRoot:(id:%s)", vcsRootID)
@@ -179,15 +178,13 @@ func (vcs *VcsRootsService) DeleteVcsRoot(vcsRootID string) (bool, error) {
 }
 
 func (vcs *VcsRootsService) PrintAllVcsRoots(allVcsRoots []string) {
-
 	if len(allVcsRoots) == 0 {
 		log.Println("There are no unused VCS Roots.")
 		return
 	}
 	msg := "\n\nUnused VCS Roots:\n\n"
-	i := 0
-	for i = range allVcsRoots {
-		msg += fmt.Sprintf("%d. %s\n", i+1, allVcsRoots[i])
+	for i, vcsRoot := range allVcsRoots {
+		msg += fmt.Sprintf("%d. %s\n", i+1, vcsRoot)
 	}
 	msg += "\n"
 	log.Println(msg)
