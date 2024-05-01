@@ -22,7 +22,7 @@ const (
 
 type TemplateService service
 
-// GetVcsRootsIDsFromTemplates retrieves vcs root IDs from given template IDs.
+// GetVcsRootsIDsFromTemplates retrieves VCS Root IDs from given template IDs.
 func (vcs *VcsRootsService) GetVcsRootsIDsFromTemplates(templateIDs []string) ([]string, error) {
 	vcsRootsIDs := []string{}
 
@@ -35,12 +35,12 @@ func (vcs *VcsRootsService) GetVcsRootsIDsFromTemplates(templateIDs []string) ([
 
 		response, err := vcs.client.client.Do(req)
 		if err != nil {
-			return []string{}, fmt.Errorf("error executing request to get vcs roots: %v", err)
+			return []string{}, fmt.Errorf("error executing request to get VCS Roots: %v", err)
 		}
 		defer response.Body.Close()
 
 		if response.StatusCode != http.StatusOK {
-			return []string{}, fmt.Errorf("failed to get vcs roots, status code: %d", response.StatusCode)
+			return []string{}, fmt.Errorf("failed to get VCS Roots, status code: %d", response.StatusCode)
 		}
 
 		var vcsRootResponse VcsRootFromTemplateResponse
@@ -56,9 +56,9 @@ func (vcs *VcsRootsService) GetVcsRootsIDsFromTemplates(templateIDs []string) ([
 	return vcsRootsIDs, nil
 }
 
-// GetAllVcsRootsTemplates collects all vcs root IDs from a list of all project templates.
+// GetAllVcsRootsTemplates collects all VCS Roots IDs from a list of all project templates.
 func (vcs *VcsRootsService) GetAllVcsRootsTemplates(allProjects []string) ([]string, error) {
-	// Create a worker pool to concurrently fetch vcs root IDs from templates.
+	// Create a worker pool to concurrently fetch VCS Roots IDs from templates.
 	pool := pond.New(templatePondWorkerPoolSize, templatePondWorkerPoolSize)
 	defer pool.StopAndWait()
 

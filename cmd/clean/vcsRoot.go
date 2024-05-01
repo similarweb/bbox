@@ -3,7 +3,6 @@ package clean
 import (
 	"bbox/pkg/models"
 	"bbox/teamcity"
-	"fmt"
 	"net/url"
 	"os"
 
@@ -18,8 +17,8 @@ var vcsRootsCmdName string = "vcs"
 
 var vcsRootsCmd = &cobra.Command{
 	Use:   vcsRootsCmdName,
-	Short: "Delete all unused vcs roots",
-	Long:  `Delete all unused vcs roots. "Unused" vcs root refers to a vcs root that is neither linked to any build configurations nor included in any build templates.`,
+	Short: "Delete all unused VCS Roots",
+	Long:  `Delete all unused VCS Roots. "Unused" VCS Root refers to a VCS Root that is neither linked to any build configurations nor included in any build templates.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		teamcityUsername, _ := cmd.Root().PersistentFlags().GetString("teamcity-username")
 		teamcityPassword, _ := cmd.Root().PersistentFlags().GetString("teamcity-password")
@@ -34,10 +33,10 @@ var vcsRootsCmd = &cobra.Command{
 		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
 		logger := log.WithField("teamcityURL", url.String())
 
-		logger.Info("fetching all TeamCity vcsRoots.")
+		logger.Info("fetching all TeamCity VCS Roots.")
 		allVcsRoots, err := client.VcsRoots.GetAllVcsRootsIDs()
 		if err != nil {
-			log.Error("error while trying to get all vcs roots: ", err)
+			log.Error("error while trying to get all VCS Roots: ", err)
 			os.Exit(1)
 		}
 		logger.Info("fetching all TeamCity projects")
@@ -46,55 +45,53 @@ var vcsRootsCmd = &cobra.Command{
 			log.Error("error while trying to get all projects: ", err)
 			os.Exit(1)
 		}
-		logger.Info("extracting all VCS roots templates from all projects")
+		logger.Info("extracting all VCS Roots templates from all projects")
 		allVcsRootsTemplates, err := client.VcsRoots.GetAllVcsRootsTemplates(allTeamCityProjects)
 		if err != nil {
-			log.Error("error while trying to get all vcs roots templates: ", err)
+			log.Error("error while trying to get all VCS Roots templates: ", err)
 			os.Exit(1)
 		}
-		logger.Info("filtering all unused VCS roots")
+		logger.Info("filtering all unused VCS Roots")
 		allUnusedVcsRoots, err := client.VcsRoots.GetUnusedVcsRootsIDs(allVcsRoots, allVcsRootsTemplates)
 		if err != nil {
-			log.Error("error while trying to get all unused vcs roots: ", err)
+			log.Error("error while trying to get all unused VCS Roots: ", err)
 			os.Exit(1)
 		}
 
 		if autoDelete {
-			logger.Info("deleting all unused VCS roots")
+			logger.Info("deleting all unused VCS Roots")
 			numberOfDeletedVcsRoots, err := client.VcsRoots.DeleteUnusedVcsRoots(allUnusedVcsRoots)
 			if err != nil {
-				log.Errorf("Error while trying to delete unused VCS roots: %v", err)
+				log.Errorf("Error while trying to delete unused VCS Roots: %v", err)
 				return
 			}
-			logger.Infof("%d unused VCS roots have been deleted.", numberOfDeletedVcsRoots)
+			logger.Infof("%d unused VCS Roots have been deleted.", numberOfDeletedVcsRoots)
 		} else {
-			listMsg := fmt.Sprintf("There are %d unused vcs roots. Do you want to delete the following vcs roots permanently:", len(allUnusedVcsRoots))
-
-			model := models.UnusedVcsRootsModel{
-				ActionModel: models.NewConfirmActionModel(),
-				ListModel:   models.NewListModel(allUnusedVcsRoots, listMsg),
-			}
+			client.VcsRoots.PrintAllVcsRoots(allUnusedVcsRoots)
+			model := models.NewConfirmActionModel()
 			p := tea.NewProgram(model)
 			activeModel, err := p.Run()
 			if err != nil {
-				log.Fatal("error while trying to start the program: ", err)
+				log.Error("error while running confirmation model: ", err)
+				os.Exit(2)
 			}
 
-			confirmedModel, ok := activeModel.(models.UnusedVcsRootsModel)
+			confirmedModel, ok := activeModel.(models.ConfirmActionModel)
 			if !ok {
-				log.Fatal("could not cast final model to ConfirmModel")
+				log.Error("could not cast final model to ConfirmModel")
+				os.Exit(2)
 			}
-
 			if confirmedModel.IsConfirmed() {
-				logger.Info("deleting all unused VCS roots")
-				numberOfDeletedVcsRoots, err := client.VcsRoots.DeleteUnusedVcsRoots(allUnusedVcsRoots)
+
+				logger.Info("deleting all unused VCS Roots")
+				numberOfDeletedVCSRoots, err := client.VcsRoots.DeleteUnusedVcsRoots(allUnusedVcsRoots)
 				if err != nil {
-					log.Errorf("Error while trying to delete unused VCS roots: %v", err)
-					return
+					log.Errorf("Error while trying to delete unused VCS Roots: %v", err)
+					os.Exit(1)
 				}
-				logger.Infof("%d unused VCS roots have been deleted.", numberOfDeletedVcsRoots)
+				logger.Infof("%d unused VCS Roots have been deleted.", numberOfDeletedVCSRoots)
 			} else {
-				logger.Info("deletion cancelled by the user.")
+				log.Info("deletion cancelled by the user.")
 			}
 		}
 		os.Exit(0)
@@ -102,6 +99,6 @@ var vcsRootsCmd = &cobra.Command{
 }
 
 func init() {
-	vcsRootsCmd.Flags().BoolVarP(&autoDelete, "confirm", "c", false, "Automatically confirm to delete all unused VCS roots without prompting the user.")
+	vcsRootsCmd.Flags().BoolVarP(&autoDelete, "confirm", "c", false, "Automatically confirm to delete all unused VCS Roots without prompting the user.")
 	Cmd.AddCommand(vcsRootsCmd)
 }
