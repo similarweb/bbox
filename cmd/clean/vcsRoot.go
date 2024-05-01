@@ -1,10 +1,11 @@
 package clean
 
 import (
-	"bbox/pkg/models"
-	"bbox/teamcity"
 	"net/url"
 	"os"
+
+	"bbox/pkg/models"
+	"bbox/teamcity"
 
 	tea "github.com/charmbracelet/bubbletea"
 	log "github.com/sirupsen/logrus"
@@ -27,7 +28,7 @@ var vcsRootsCmd = &cobra.Command{
 		url, err := url.Parse(teamcityURL)
 		if err != nil {
 			log.Errorf("error parsing TeamCity URL: %s", err)
-			os.Exit(2)
+			os.Exit(1)
 		}
 
 		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
@@ -58,6 +59,12 @@ var vcsRootsCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		if len(allUnusedVcsRoots) == 0 {
+			logger.Info("no unused VCS Roots found.")
+			return
+
+		}
+
 		if autoDelete {
 			logger.Info("deleting all unused VCS Roots")
 			numberOfDeletedVcsRoots, err := client.VcsRoots.DeleteUnusedVcsRoots(allUnusedVcsRoots)
@@ -73,13 +80,13 @@ var vcsRootsCmd = &cobra.Command{
 			activeModel, err := p.Run()
 			if err != nil {
 				log.Error("error while running confirmation model: ", err)
-				os.Exit(2)
+				os.Exit(1)
 			}
 
 			confirmedModel, ok := activeModel.(models.ConfirmActionModel)
 			if !ok {
 				log.Error("could not cast final model to ConfirmModel")
-				os.Exit(2)
+				os.Exit(1)
 			}
 			if confirmedModel.IsConfirmed() {
 
@@ -94,7 +101,6 @@ var vcsRootsCmd = &cobra.Command{
 				log.Info("deletion canceled by the user.")
 			}
 		}
-		os.Exit(0)
 	},
 }
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/alitto/pond"
@@ -80,7 +81,7 @@ func (vcs *VcsRootsService) GetUnusedVcsRootsIDs(allVcsRoots []VcsRoots, allVcsR
 	for _, vcsRoot := range allVcsRoots {
 		localVcsRoot := vcsRoot // Local scope redeclaration for closure
 		pool.Submit(func() {
-			isUsed, err := vcs.IsVcsRootHaveInstance(localVcsRoot.ID)
+			isUsed, err := vcs.DoesVcsRootHaveInstance(localVcsRoot.ID)
 			if err != nil {
 				log.Errorf("error checking if %s has instances: %v", localVcsRoot.ID, err)
 				return
@@ -128,8 +129,8 @@ func (vcs *VcsRootsService) DeleteUnusedVcsRoots(allUnusedVcsRoots []string) (in
 	return len(allUnusedVcsRoots), nil
 }
 
-// IsVcsRootHaveInstance checks if a VCS Root has an instance.
-func (vcs *VcsRootsService) IsVcsRootHaveInstance(vcsRootID string) (bool, error) {
+// DoesVcsRootHaveInstance checks if a VCS Root has an instance.
+func (vcs *VcsRootsService) DoesVcsRootHaveInstance(vcsRootID string) (bool, error) {
 	var instancesResponse VcsRootInstanceResponse
 	// Get VCS Root instances
 	instancesURL := fmt.Sprintf("app/rest/vcs-root-instances?locator=vcsRoot:(id:%s)", vcsRootID)
@@ -180,13 +181,8 @@ func (vcs *VcsRootsService) DeleteVcsRoot(vcsRootID string) (bool, error) {
 func (vcs *VcsRootsService) PrintAllVcsRoots(allVcsRoots []string) {
 	if len(allVcsRoots) == 0 {
 		log.Println("There are no unused VCS Roots.")
-		return
+	} else {
+		list := strings.Join(allVcsRoots, "\n")
+		log.Printf("Unused VCS Roots:\n%s\n", list)
 	}
-	msg := "\n\nUnused VCS Roots:\n\n"
-
-	for i := range allVcsRoots {
-		msg += fmt.Sprintf("%d. %s\n", i+1, allVcsRoots[i])
-	}
-	msg += "\n"
-	log.Println(msg)
 }

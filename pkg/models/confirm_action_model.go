@@ -1,6 +1,8 @@
 package models
 
 import (
+	"strings"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -24,10 +26,11 @@ func (m ConfirmActionModel) Init() tea.Cmd {
 
 func (m ConfirmActionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if keyMsg, ok := msg.(tea.KeyMsg); ok {
-		if keyMsg.String() == "y" {
+		userInput := strings.ToLower(keyMsg.String())
+		if userInput == "y" {
 			m.Confirmed = true
 			m.Quitting = true
-		} else if keyMsg.String() == "n" || keyMsg.String() == "q" || keyMsg.String() == "ctrl+c" {
+		} else if userInput == "n" || userInput == "q" || userInput == "ctrl+c" {
 			m.Quitting = true
 		}
 	}

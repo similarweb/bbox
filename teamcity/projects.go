@@ -14,7 +14,7 @@ type ProjectsResponse struct {
 	} `json:"project"`
 }
 
-type TemplateResponse struct {
+type ProjectTemplatesResponse struct {
 	Count     int `json:"count"`
 	Templates []struct {
 		ID string `json:"id"`
@@ -75,7 +75,7 @@ func (vcs *VcsRootsService) GetProjectTemplates(projectID string) ([]string, err
 		return []string{}, fmt.Errorf("failed to get templates, status code: %d", response.StatusCode)
 	}
 
-	var projectTemplates TemplateResponse
+	var projectTemplates ProjectTemplatesResponse
 	err = json.NewDecoder(response.Body).Decode(&projectTemplates)
 	if err != nil {
 		return []string{}, fmt.Errorf("error decoding response body: %w", err)
