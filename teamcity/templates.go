@@ -30,12 +30,12 @@ func (vcs *VcsRootsService) GetVcsRootsIDsFromTemplates(templateIDs []string) ([
 		vcsRootURL := fmt.Sprintf("app/rest/buildTypes/id:%s/vcs-root-entries?fields=vcs-root-entry", templateID)
 		req, err := vcs.client.NewRequestWrapper("GET", vcsRootURL, nil)
 		if err != nil {
-			return []string{}, fmt.Errorf("error creating request: %v", err)
+			return []string{}, fmt.Errorf("error creating request: %w", err)
 		}
 
 		response, err := vcs.client.client.Do(req)
 		if err != nil {
-			return []string{}, fmt.Errorf("error executing request to get VCS Roots: %v", err)
+			return []string{}, fmt.Errorf("error executing request to get VCS Roots: %w", err)
 		}
 		defer response.Body.Close()
 
@@ -46,7 +46,7 @@ func (vcs *VcsRootsService) GetVcsRootsIDsFromTemplates(templateIDs []string) ([
 		var vcsRootResponse VcsRootFromTemplateResponse
 		err = json.NewDecoder(response.Body).Decode(&vcsRootResponse)
 		if err != nil {
-			return []string{}, fmt.Errorf("error decoding response body: %v", err)
+			return []string{}, fmt.Errorf("error decoding response body: %w", err)
 		}
 
 		for _, vcsRootEntry := range vcsRootResponse.VCSRootEntries {

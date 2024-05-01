@@ -179,13 +179,16 @@ func (vcs *VcsRootsService) DeleteVcsRoot(vcsRootID string) (bool, error) {
 }
 
 func (vcs *VcsRootsService) PrintAllVcsRoots(allVcsRoots []string) {
+
 	if len(allVcsRoots) == 0 {
-		fmt.Println("\nThere are no unused VCS Roots.")
+		log.Println("There are no unused VCS Roots.")
 		return
 	}
-	fmt.Printf("\nUnused VCS Roots:\n\n")
-	for i := range allVcsRoots {
-		fmt.Printf("%d. %s\n", i+1, allVcsRoots[i])
+	msg := "\n\nUnused VCS Roots:\n\n"
+	i := 0
+	for i = range allVcsRoots {
+		msg += fmt.Sprintf("%d. %s\n", i+1, allVcsRoots[i])
 	}
-	fmt.Println()
+	msg += "\n"
+	log.Println(msg)
 }

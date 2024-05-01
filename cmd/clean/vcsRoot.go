@@ -91,7 +91,7 @@ var vcsRootsCmd = &cobra.Command{
 				}
 				logger.Infof("%d unused VCS Roots have been deleted.", numberOfDeletedVCSRoots)
 			} else {
-				log.Info("deletion cancelled by the user.")
+				log.Info("deletion canceled by the user.")
 			}
 		}
 		os.Exit(0)
