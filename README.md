@@ -114,12 +114,21 @@ go run main.go multi-trigger \
 ```
 
 ### Clean Vcs-Roots
-Delete all unused vcs-roots. Unused vcs-root refers to a vcs-root that is neither linked to any build configurations nor included in any build templates.
+This command identifies and lists all unused VCS Roots in a TeamCity server environment. An unused VCS Root is defined as a VCS Root that is not linked to any build configurations and is not included in any build templates. By default, this command will prompt for confirmation before proceeding with the deletion of these unused VCS roots.
 
 ```sh
 go run main.go clean vcs \
     --teamcity-username "<Username>" \
     --teamcity-password '<Password>' \
+```
+
+Similar to the previous command, this function targets unused VCS Roots for deletion. However, it includes the --confirm flag, which automatically confirms the deletion process, eliminating the need for manual user confirmation. 
+
+```sh
+go run main.go clean vcs \
+    --teamcity-username "<Username>" \
+    --teamcity-password '<Password>' \
+    --confirm
 ```
 
 ## Support
