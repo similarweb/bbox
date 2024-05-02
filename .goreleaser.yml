@@ -4,7 +4,7 @@ builds:
     goos:
       - linux
       - darwin
-    ldflags: "-X gitlab.similarweb.io/infrastructure/bbox/version.version={{.Version}}"
+    ldflags: "-X gitlab.int.similarweb.io/infrastructure/bbox/version.version={{.Version}}"
     goarch:
       - amd64
       - arm64
@@ -17,8 +17,8 @@ archives:
   - format: tar.gz
 
 gitlab_urls:
-  api: http://gitlab.similarweb.io/api/v4/
-  download: http://gitlab.similarweb.io
+  api: https://gitlab.int.similarweb.io/api/v4/
+  download: https://gitlab.int.similarweb.io
   skip_tls_verify: true
   use_package_registry: true
 
