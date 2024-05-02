@@ -24,14 +24,14 @@ type ProjectTemplatesResponse struct {
 type ProjectService service
 
 // getAllProjects retrieves all project IDs available in TeamCity.
-func (vcs *VcsRootsService) GetAllProjects() ([]string, error) {
-	req, err := vcs.client.NewRequestWrapper("GET", "app/rest/projects", nil)
+func (project *ProjectService) GetAllProjects() ([]string, error) {
+	req, err := project.client.NewRequestWrapper("GET", "app/rest/projects", nil)
 	if err != nil {
 		log.Errorf("error creating request: %v", err)
 		return nil, err
 	}
 
-	response, err := vcs.client.client.Do(req)
+	response, err := project.client.client.Do(req)
 	if err != nil {
 		log.Errorf("error executing request to get projects: %v", err)
 		return nil, err
@@ -57,15 +57,15 @@ func (vcs *VcsRootsService) GetAllProjects() ([]string, error) {
 }
 
 // GetProjectTemplates retrieves all template IDs associated with a given project ID.
-func (vcs *VcsRootsService) GetProjectTemplates(projectID string) ([]string, error) {
+func (project *ProjectService) GetProjectTemplates(projectID string) ([]string, error) {
 
 	templatesURL := fmt.Sprintf("app/rest/projects/id:%s/templates", projectID)
-	req, err := vcs.client.NewRequestWrapper("GET", templatesURL, nil)
+	req, err := project.client.NewRequestWrapper("GET", templatesURL, nil)
 	if err != nil {
 		return []string{}, fmt.Errorf("error creating request: %w", err)
 	}
 
-	response, err := vcs.client.client.Do(req)
+	response, err := project.client.client.Do(req)
 	if err != nil {
 		return []string{}, fmt.Errorf("error executing request to get templates: %w", err)
 	}
