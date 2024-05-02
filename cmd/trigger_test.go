@@ -32,7 +32,7 @@ func TestTrigger(t *testing.T) {
 			properties:  map[string]string{"key": "value"},
 			expectedTrigger: types.TriggerBuildWithParametersResponse{
 				BuildTypeID: "bt123",
-				WebURL:      "https://example.com/buildStatus",
+				WebURL:      "https://teamcity-example.com/",
 				ID:          123,
 				BuildType: types.BuildType{
 					Name: "buildName",
@@ -53,7 +53,7 @@ func TestTrigger(t *testing.T) {
 			properties:  map[string]string{"key": "value"},
 			expectedTrigger: types.TriggerBuildWithParametersResponse{
 				BuildTypeID: "bt123",
-				WebURL:      "https://example.com/buildStatus",
+				WebURL:      "https://teamcity-example.com/",
 				ID:          123,
 				BuildType: types.BuildType{
 					Name: "buildName",
@@ -74,7 +74,7 @@ func TestTrigger(t *testing.T) {
 			properties:  map[string]string{"key": "value"},
 			expectedTrigger: types.TriggerBuildWithParametersResponse{
 				BuildTypeID: "bt123",
-				WebURL:      "https://example.com/buildStatus",
+				WebURL:      "https://teamcity-example.com/",
 				ID:          123,
 				BuildType: types.BuildType{
 					Name: "buildName",

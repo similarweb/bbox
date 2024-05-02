@@ -34,7 +34,7 @@ func TestTriggerBuilds(t *testing.T) {
 		exitError          error
 	}{
 		{
-			name:               "Single Build with Artifacts",
+			name:               "Two Builds with Artifacts Required - Both Successful",
 			waitForBuilds:      true,
 			waitTimeout:        30 * time.Second,
 			multiArtifactsPath: "artifacts/",
@@ -50,7 +50,7 @@ func TestTriggerBuilds(t *testing.T) {
 					},
 					expectedTrigger: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
-						WebURL:      "https://example.com/buildStatus",
+						WebURL:      "https://teamcity-example.com/",
 						ID:          123,
 						BuildType: types.BuildType{
 							Name: "buildName",
@@ -66,11 +66,11 @@ func TestTriggerBuilds(t *testing.T) {
 						BuildTypeID:       "bt1234",
 						BranchName:        "master",
 						PropertiesFlag:    map[string]string{"key": "value"},
-						DownloadArtifacts: false,
+						DownloadArtifacts: true,
 					},
 					expectedTrigger: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt1234",
-						WebURL:      "https://example.com/buildStatus",
+						WebURL:      "https://teamcity-example.com/",
 						ID:          1234,
 						BuildType: types.BuildType{
 							Name: "buildName1",
@@ -84,7 +84,7 @@ func TestTriggerBuilds(t *testing.T) {
 			},
 		},
 		{
-			name:               "Two builds with artifacts required - one failed",
+			name:               "Two Builds With Artifacts Required - One Failed",
 			waitForBuilds:      true,
 			waitTimeout:        30 * time.Second,
 			multiArtifactsPath: "artifacts/",
@@ -100,7 +100,7 @@ func TestTriggerBuilds(t *testing.T) {
 					},
 					expectedTrigger: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
-						WebURL:      "https://example.com/buildStatus",
+						WebURL:      "https://teamcity-example.com/",
 						ID:          123,
 						BuildType: types.BuildType{
 							Name: "failedBuild",
@@ -119,7 +119,7 @@ func TestTriggerBuilds(t *testing.T) {
 					},
 					expectedTrigger: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt1234",
-						WebURL:      "https://example.com/buildStatus",
+						WebURL:      "https://teamcity-example.com/",
 						ID:          1234,
 						BuildType: types.BuildType{
 							Name: "buildName1",
@@ -132,7 +132,7 @@ func TestTriggerBuilds(t *testing.T) {
 			},
 		},
 		{
-			name:               "build with trigger failure",
+			name:               "Build With Trigger Failure",
 			waitForBuilds:      true,
 			waitTimeout:        30 * time.Second,
 			multiArtifactsPath: "artifacts/",
@@ -149,7 +149,7 @@ func TestTriggerBuilds(t *testing.T) {
 					},
 					expectedTrigger: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
-						WebURL:      "https://example.com/buildStatus",
+						WebURL:      "https://teamcity-example.com/",
 						ID:          123,
 						BuildType: types.BuildType{
 							Name: "failedTrigger",
@@ -180,7 +180,7 @@ func TestTriggerBuilds(t *testing.T) {
 					},
 					expectedTrigger: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
-						WebURL:      "https://example.com/buildStatus",
+						WebURL:      "https://teamcity-example.com/",
 						ID:          123,
 						BuildType: types.BuildType{
 							Name: "failedWait",
@@ -212,7 +212,7 @@ func TestTriggerBuilds(t *testing.T) {
 					},
 					expectedTrigger: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
-						WebURL:      "https://example.com/buildStatus",
+						WebURL:      "https://teamcity-example.com/",
 						ID:          123456,
 						BuildType: types.BuildType{
 							Name: "failedWait",
@@ -246,7 +246,7 @@ func TestTriggerBuilds(t *testing.T) {
 					},
 					expectedTrigger: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
-						WebURL:      "https://example.com/buildStatus",
+						WebURL:      "https://teamcity-example.com/",
 						ID:          123456,
 						BuildType: types.BuildType{
 							Name: "failedWait",
@@ -279,7 +279,7 @@ func TestTriggerBuilds(t *testing.T) {
 					},
 					expectedTrigger: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
-						WebURL:      "https://example.com/buildStatus",
+						WebURL:      "https://teamcity-example.com/",
 						ID:          123456,
 						BuildType: types.BuildType{
 							Name: "failedWait",
