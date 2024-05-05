@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var queueCmdName string = "queue"
+var queueCmdName = "queue"
 
 var queueCmd = &cobra.Command{
 	Use:   queueCmdName,
