@@ -15,14 +15,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type IArtifactsService interface {
-	BuildHasArtifact(buildID int) bool
-	GetArtifactChildren(buildID int) (types.ArtifactChildren, error)
-	GetArtifactContentByPath(path string) ([]byte, error)
-	GetAllBuildTypeArtifacts(buildID int, buildTypeID string) ([]byte, error)
-	DownloadAndUnzipArtifacts(buildID int, buildTypeID, destPath string) error
-}
-
 type ArtifactsService struct {
 	client *Client
 }

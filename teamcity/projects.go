@@ -8,8 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// todo - move types
-
 type ProjectsResponse struct {
 	Projects []struct {
 		ID string `json:"id"`
@@ -21,11 +19,6 @@ type ProjectTemplatesResponse struct {
 	Templates []struct {
 		ID string `json:"id"`
 	} `json:"buildType"`
-}
-
-type IProjectService interface {
-	GetAllProjects() ([]string, error)
-	GetProjectTemplates(projectID string) ([]string, error)
 }
 
 type ProjectService service

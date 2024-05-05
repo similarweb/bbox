@@ -11,8 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// todo - move type
-
 type VcsRoots struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -28,15 +26,6 @@ type VcsRootsResponse struct {
 
 type VcsRootInstanceResponse struct {
 	Count int `json:"count"`
-}
-
-type IVcsRootsService interface {
-	GetAllVcsRootsIDs() ([]VcsRoots, error)
-	GetUnusedVcsRootsIDs(allVcsRoots []VcsRoots, allVcsRootsTemplates []string) ([]string, error)
-	DeleteUnusedVcsRoots(allUnusedVcsRoots []string) (int, error)
-	DoesVcsRootHaveInstance(vcsRootID string) (bool, error)
-	DeleteVcsRoot(vcsRootID string) (bool, error)
-	PrintAllVcsRoots(allVcsRoots []string)
 }
 
 type VcsRootsService service

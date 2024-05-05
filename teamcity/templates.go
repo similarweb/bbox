@@ -6,16 +6,10 @@ import (
 	"net/http"
 )
 
-// todo - move types
-
 type VcsRootFromTemplateResponse struct {
 	VCSRootEntries []struct {
 		ID string `json:"id"`
 	} `json:"vcs-root-entry"`
-}
-
-type ITemplateService interface {
-	GetVcsRootsIDsFromTemplates(templateIDs []string) ([]string, error)
 }
 
 type TemplateService service

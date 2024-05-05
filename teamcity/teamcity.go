@@ -1,6 +1,7 @@
 package teamcity
 
 import (
+	"bbox/pkg/types"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 var (
@@ -34,6 +36,43 @@ type Client struct {
 	VcsRoots  IVcsRootsService
 	Project   IProjectService
 	Template  ITemplateService
+}
+
+// IBuildService defines the interface for build operations in TeamCity.
+type IBuildService interface {
+	GetBuildStatus(buildID int) (types.BuildStatusResponse, error)
+	TriggerBuild(buildTypeID, branchName string, params map[string]string) (types.TriggerBuildWithParametersResponse, error)
+	WaitForBuild(buildName string, buildNumber int, timeout time.Duration) (types.BuildStatusResponse, error)
+}
+
+type IArtifactsService interface {
+	BuildHasArtifact(buildID int) bool
+	GetArtifactChildren(buildID int) (types.ArtifactChildren, error)
+	GetArtifactContentByPath(path string) ([]byte, error)
+	GetAllBuildTypeArtifacts(buildID int, buildTypeID string) ([]byte, error)
+	DownloadAndUnzipArtifacts(buildID int, buildTypeID, destPath string) error
+}
+
+type IQueueService interface {
+	ClearQueue() error
+}
+
+type IVcsRootsService interface {
+	GetAllVcsRootsIDs() ([]VcsRoots, error)
+	GetUnusedVcsRootsIDs(allVcsRoots []VcsRoots, allVcsRootsTemplates []string) ([]string, error)
+	DeleteUnusedVcsRoots(allUnusedVcsRoots []string) (int, error)
+	DoesVcsRootHaveInstance(vcsRootID string) (bool, error)
+	DeleteVcsRoot(vcsRootID string) (bool, error)
+	PrintAllVcsRoots(allVcsRoots []string)
+}
+
+type IProjectService interface {
+	GetAllProjects() ([]string, error)
+	GetProjectTemplates(projectID string) ([]string, error)
+}
+
+type ITemplateService interface {
+	GetVcsRootsIDsFromTemplates(templateIDs []string) ([]string, error)
 }
 
 type BasicAuth struct {

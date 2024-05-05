@@ -9,10 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type IQueueService interface {
-	ClearQueue() error
-}
-
 type QueueService struct {
 	client *Client
 }
