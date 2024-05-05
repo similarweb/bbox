@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// MockTeamCityClient implements the interfaces used by the Build and Artifacts services.
 type MockTeamCityClient struct {
 	mock.Mock
 	Build     teamcity.IBuildService

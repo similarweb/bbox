@@ -115,7 +115,6 @@ func TestTrigger(t *testing.T) {
 				mockArtifacts.On("GetArtifactChildren", tt.expectedTrigger.ID).Return(types.ArtifactChildren{}, tt.expectArtifactErr)
 			}
 
-			// Call the trigger function
 			trigger(client, tt.buildTypeID, tt.branchName, tt.artifactsPath, tt.properties, tt.requireArtifacts, tt.waitForBuild, tt.downloadArtifacts, tt.waitForBuildTimeout)
 
 			mockBuild.AssertExpectations(t)

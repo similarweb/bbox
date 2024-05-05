@@ -46,7 +46,6 @@ func init() {
 	// TeamCity authentication
 	RootCmd.PersistentFlags().StringVar(&TeamcityUsername, "teamcity-username", "", "Teamcity username")
 	RootCmd.PersistentFlags().StringVar(&TeamcityPassword, "teamcity-password", "", "Teamcity password")
-	// get the TeamCity URL from environment variable if exists
 	RootCmd.PersistentFlags().StringVar(&TeamcityURL, "teamcity-url", os.Getenv("BBOX_TEAMCITY_URL"), "Teamcity URL")
 	RootCmd.MarkFlagsRequiredTogether("teamcity-username", "teamcity-password")
 	RootCmd.AddCommand(clean.Cmd)

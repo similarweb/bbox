@@ -9,9 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type QueueService struct {
-	client *Client
-}
+type QueueService service
 
 // ClearQueue cancels all queued builds in TeamCity using the REST API.
 func (qs *QueueService) ClearQueue() error {
