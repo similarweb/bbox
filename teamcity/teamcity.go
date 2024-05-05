@@ -32,8 +32,8 @@ type Client struct {
 	Queue     IQueueService
 	Build     IBuildService
 	VcsRoots  IVcsRootsService
-	Projects  IProjectService
-	Templates ITemplateService
+	Project   IProjectService
+	Template  ITemplateService
 }
 
 type BasicAuth struct {
@@ -70,8 +70,8 @@ func (c *Client) initializeServices() {
 	c.Queue = &QueueService{client: c}
 	c.Build = &BuildService{client: c}
 	c.VcsRoots = &VcsRootsService{client: c}
-	c.Projects = &ProjectService{client: c}
-	c.Templates = &TemplateService{client: c}
+	c.Project = &ProjectService{client: c}
+	c.Template = &TemplateService{client: c}
 }
 
 // RequestOption represents an option that can modify an http.Request.

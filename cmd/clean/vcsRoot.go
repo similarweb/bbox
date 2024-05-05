@@ -53,7 +53,7 @@ var vcsRootsCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		logger.Info("fetching all TeamCity projects")
-		allTeamCityProjects, err := client.Projects.GetAllProjects()
+		allTeamCityProjects, err := client.Project.GetAllProjects()
 		if err != nil {
 			log.Error("error while trying to get all projects: ", err)
 			os.Exit(1)
@@ -139,7 +139,7 @@ func getAllVcsRootsTemplates(client *teamcity.Client, allTeamCityProjects []stri
 		localProjectID := projectID // capture range variable
 
 		pool.Submit(func() {
-			templateIDs, err := client.Projects.GetProjectTemplates(localProjectID)
+			templateIDs, err := client.Project.GetProjectTemplates(localProjectID)
 			if err != nil {
 				mu.Lock()
 				errors = append(errors, err)
@@ -148,7 +148,7 @@ func getAllVcsRootsTemplates(client *teamcity.Client, allTeamCityProjects []stri
 				return
 			}
 
-			templateVCSRootIDs, err := client.Templates.GetVcsRootsIDsFromTemplates(templateIDs)
+			templateVCSRootIDs, err := client.Template.GetVcsRootsIDsFromTemplates(templateIDs)
 			if err != nil {
 				mu.Lock()
 				errors = append(errors, err)
