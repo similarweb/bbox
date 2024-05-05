@@ -11,15 +11,21 @@ import (
 )
 
 type buildTestCase struct {
-	parameters                types.BuildParameters
-	expectedTrigger           types.TriggerBuildWithParametersResponse
-	triggerError              error
-	triggerShouldFail         bool
-	waitError                 error
-	expectedWait              types.BuildStatusResponse
-	waitShouldFail            bool
-	downloadError             error
-	expectedBuildHasArtifacts bool
+	parameters                       types.BuildParameters
+	triggerBuildResponse             types.TriggerBuildWithParametersResponse
+	triggerBuildError                error
+	triggerShouldFail                bool
+	waitForBuildError                error
+	waitForBuildResponse             types.BuildStatusResponse
+	waitShouldFail                   bool
+	downloadError                    error
+	buildHasArtifactsResponse        bool
+	getBuildStatusResponse           types.BuildStatusResponse
+	getBuildStatusError              error
+	getArtifactChildrenResponse      types.ArtifactChildren
+	getArtifactChildrenError         error
+	getAllBuildTypeArtifactsResponse []byte
+	getAllBuildTypeArtifactsError    error
 }
 
 func TestTriggerBuilds(t *testing.T) {
@@ -48,7 +54,7 @@ func TestTriggerBuilds(t *testing.T) {
 						PropertiesFlag:    map[string]string{"key": "value"},
 						DownloadArtifacts: true,
 					},
-					expectedTrigger: types.TriggerBuildWithParametersResponse{
+					triggerBuildResponse: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
 						WebURL:      "https://teamcity-example.com/",
 						ID:          123,
@@ -57,9 +63,9 @@ func TestTriggerBuilds(t *testing.T) {
 						},
 					},
 					triggerShouldFail:         false,
-					expectedWait:              types.BuildStatusResponse{ID: 123, Status: "SUCCESS", State: "finished"},
+					waitForBuildResponse:      types.BuildStatusResponse{ID: 123, Status: "SUCCESS", State: "finished"},
 					waitShouldFail:            false,
-					expectedBuildHasArtifacts: true,
+					buildHasArtifactsResponse: true,
 				},
 				{
 					parameters: types.BuildParameters{
@@ -68,7 +74,7 @@ func TestTriggerBuilds(t *testing.T) {
 						PropertiesFlag:    map[string]string{"key": "value"},
 						DownloadArtifacts: true,
 					},
-					expectedTrigger: types.TriggerBuildWithParametersResponse{
+					triggerBuildResponse: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt1234",
 						WebURL:      "https://teamcity-example.com/",
 						ID:          1234,
@@ -77,9 +83,9 @@ func TestTriggerBuilds(t *testing.T) {
 						},
 					},
 					triggerShouldFail:         false,
-					expectedWait:              types.BuildStatusResponse{ID: 1234, Status: "SUCCESS", State: "finished"},
+					waitForBuildResponse:      types.BuildStatusResponse{ID: 1234, Status: "SUCCESS", State: "finished"},
 					waitShouldFail:            false,
-					expectedBuildHasArtifacts: true,
+					buildHasArtifactsResponse: true,
 				},
 			},
 		},
@@ -98,7 +104,7 @@ func TestTriggerBuilds(t *testing.T) {
 						PropertiesFlag:    map[string]string{"key": "value"},
 						DownloadArtifacts: true,
 					},
-					expectedTrigger: types.TriggerBuildWithParametersResponse{
+					triggerBuildResponse: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
 						WebURL:      "https://teamcity-example.com/",
 						ID:          123,
@@ -106,9 +112,9 @@ func TestTriggerBuilds(t *testing.T) {
 							Name: "failedBuild",
 						},
 					},
-					triggerShouldFail: false,
-					expectedWait:      types.BuildStatusResponse{ID: 123, Status: "FAILURE", State: "finished"},
-					waitShouldFail:    true,
+					triggerShouldFail:    false,
+					waitForBuildResponse: types.BuildStatusResponse{ID: 123, Status: "FAILURE", State: "finished"},
+					waitShouldFail:       true,
 				},
 				{
 					parameters: types.BuildParameters{
@@ -117,7 +123,7 @@ func TestTriggerBuilds(t *testing.T) {
 						PropertiesFlag:    map[string]string{"key": "value"},
 						DownloadArtifacts: false,
 					},
-					expectedTrigger: types.TriggerBuildWithParametersResponse{
+					triggerBuildResponse: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt1234",
 						WebURL:      "https://teamcity-example.com/",
 						ID:          1234,
@@ -125,9 +131,9 @@ func TestTriggerBuilds(t *testing.T) {
 							Name: "buildName1",
 						},
 					},
-					triggerShouldFail: false,
-					expectedWait:      types.BuildStatusResponse{ID: 1234, Status: "SUCCESS", State: "finished"},
-					waitShouldFail:    false,
+					triggerShouldFail:    false,
+					waitForBuildResponse: types.BuildStatusResponse{ID: 1234, Status: "SUCCESS", State: "finished"},
+					waitShouldFail:       false,
 				},
 			},
 		},
@@ -147,7 +153,7 @@ func TestTriggerBuilds(t *testing.T) {
 						PropertiesFlag:    map[string]string{"key": "value"},
 						DownloadArtifacts: true,
 					},
-					expectedTrigger: types.TriggerBuildWithParametersResponse{
+					triggerBuildResponse: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
 						WebURL:      "https://teamcity-example.com/",
 						ID:          123,
@@ -155,10 +161,10 @@ func TestTriggerBuilds(t *testing.T) {
 							Name: "failedTrigger",
 						},
 					},
-					triggerShouldFail: true,
-					triggerError:      errors.New("this is a test error"),
-					expectedWait:      types.BuildStatusResponse{ID: 123, Status: "FAILURE", State: "finished"},
-					waitShouldFail:    true,
+					triggerShouldFail:    true,
+					triggerBuildError:    errors.New("this is a test error"),
+					waitForBuildResponse: types.BuildStatusResponse{ID: 123, Status: "FAILURE", State: "finished"},
+					waitShouldFail:       true,
 				},
 			},
 		},
@@ -178,7 +184,7 @@ func TestTriggerBuilds(t *testing.T) {
 						PropertiesFlag:    map[string]string{"key": "value"},
 						DownloadArtifacts: true,
 					},
-					expectedTrigger: types.TriggerBuildWithParametersResponse{
+					triggerBuildResponse: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
 						WebURL:      "https://teamcity-example.com/",
 						ID:          123,
@@ -186,11 +192,11 @@ func TestTriggerBuilds(t *testing.T) {
 							Name: "failedWait",
 						},
 					},
-					triggerShouldFail: false,
-					triggerError:      nil,
-					waitError:         errors.New("this is a test error"),
-					expectedWait:      types.BuildStatusResponse{},
-					waitShouldFail:    true,
+					triggerShouldFail:    false,
+					triggerBuildError:    nil,
+					waitForBuildError:    errors.New("this is a test error"),
+					waitForBuildResponse: types.BuildStatusResponse{},
+					waitShouldFail:       true,
 				},
 			},
 		},
@@ -210,7 +216,7 @@ func TestTriggerBuilds(t *testing.T) {
 						PropertiesFlag:    map[string]string{"key": "value"},
 						DownloadArtifacts: true,
 					},
-					expectedTrigger: types.TriggerBuildWithParametersResponse{
+					triggerBuildResponse: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
 						WebURL:      "https://teamcity-example.com/",
 						ID:          123456,
@@ -219,12 +225,12 @@ func TestTriggerBuilds(t *testing.T) {
 						},
 					},
 					triggerShouldFail:         false,
-					triggerError:              nil,
-					waitError:                 nil,
-					expectedWait:              types.BuildStatusResponse{ID: 123456, Status: "SUCCESS", State: "finished"},
+					triggerBuildError:         nil,
+					waitForBuildError:         nil,
+					waitForBuildResponse:      types.BuildStatusResponse{ID: 123456, Status: "SUCCESS", State: "finished"},
 					waitShouldFail:            false,
 					downloadError:             errors.New("this is a test error"),
-					expectedBuildHasArtifacts: true,
+					buildHasArtifactsResponse: true,
 				},
 			},
 		},
@@ -244,7 +250,7 @@ func TestTriggerBuilds(t *testing.T) {
 						PropertiesFlag:    map[string]string{"key": "value"},
 						DownloadArtifacts: true,
 					},
-					expectedTrigger: types.TriggerBuildWithParametersResponse{
+					triggerBuildResponse: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
 						WebURL:      "https://teamcity-example.com/",
 						ID:          123456,
@@ -253,12 +259,12 @@ func TestTriggerBuilds(t *testing.T) {
 						},
 					},
 					triggerShouldFail:         false,
-					triggerError:              nil,
-					waitError:                 nil,
-					expectedWait:              types.BuildStatusResponse{ID: 123456, Status: "SUCCESS", State: "finished"},
+					triggerBuildError:         nil,
+					waitForBuildError:         nil,
+					waitForBuildResponse:      types.BuildStatusResponse{ID: 123456, Status: "SUCCESS", State: "finished"},
 					waitShouldFail:            false,
 					downloadError:             errors.New("this is a test error"),
-					expectedBuildHasArtifacts: false,
+					buildHasArtifactsResponse: false,
 				},
 			},
 		},
@@ -277,7 +283,7 @@ func TestTriggerBuilds(t *testing.T) {
 						PropertiesFlag:    map[string]string{"key": "value"},
 						DownloadArtifacts: true,
 					},
-					expectedTrigger: types.TriggerBuildWithParametersResponse{
+					triggerBuildResponse: types.TriggerBuildWithParametersResponse{
 						BuildTypeID: "bt123",
 						WebURL:      "https://teamcity-example.com/",
 						ID:          123456,
@@ -286,11 +292,11 @@ func TestTriggerBuilds(t *testing.T) {
 						},
 					},
 					triggerShouldFail:         false,
-					triggerError:              nil,
-					waitError:                 nil,
-					expectedWait:              types.BuildStatusResponse{ID: 123456, Status: "SUCCESS", State: "finished"},
+					triggerBuildError:         nil,
+					waitForBuildError:         nil,
+					waitForBuildResponse:      types.BuildStatusResponse{ID: 123456, Status: "SUCCESS", State: "finished"},
 					waitShouldFail:            false,
-					expectedBuildHasArtifacts: false,
+					buildHasArtifactsResponse: false,
 				},
 			},
 		},
@@ -309,17 +315,17 @@ func TestTriggerBuilds(t *testing.T) {
 
 			for _, build := range tc.buildsTriggered {
 				parameters = append(parameters, build.parameters)
-				mockBuildService.On("TriggerBuild", build.parameters.BuildTypeID, build.parameters.BranchName, build.parameters.PropertiesFlag).Return(build.expectedTrigger, build.triggerError)
+				mockBuildService.On("TriggerBuild", build.parameters.BuildTypeID, build.parameters.BranchName, build.parameters.PropertiesFlag).Return(build.triggerBuildResponse, build.triggerBuildError)
 				if !build.triggerShouldFail && tc.waitForBuilds {
-					mockBuildService.On("WaitForBuild", build.expectedTrigger.BuildType.Name, build.expectedTrigger.ID, tc.waitTimeout).Return(build.expectedWait, build.waitError)
-					mockBuildService.On("GetBuildStatus", build.expectedTrigger.ID).Return(types.BuildStatusResponse{Status: "SUCCESS", State: "finished"}, nil)
+					mockBuildService.On("WaitForBuild", build.triggerBuildResponse.BuildType.Name, build.triggerBuildResponse.ID, tc.waitTimeout).Return(build.waitForBuildResponse, build.waitForBuildError)
+					mockBuildService.On("GetBuildStatus", build.triggerBuildResponse.ID).Return(build.getBuildStatusResponse, build.getBuildStatusError)
 				}
 				if !build.waitShouldFail && build.parameters.DownloadArtifacts {
-					mockArtifactsService.On("BuildHasArtifact", build.expectedTrigger.ID).Return(build.expectedBuildHasArtifacts)
-					mockArtifactsService.On("GetArtifactChildren", build.expectedTrigger.ID).Return(types.ArtifactChildren{}, nil)
-					if build.expectedBuildHasArtifacts {
-						mockArtifactsService.On("DownloadAndUnzipArtifacts", build.expectedTrigger.ID, build.parameters.BuildTypeID, tc.multiArtifactsPath).Return(build.downloadError)
-						mockArtifactsService.On("GetAllBuildTypeArtifacts", build.expectedTrigger.ID, build.parameters.BuildTypeID).Return([]byte{}, nil)
+					mockArtifactsService.On("BuildHasArtifact", build.triggerBuildResponse.ID).Return(build.buildHasArtifactsResponse)
+					mockArtifactsService.On("GetArtifactChildren", build.triggerBuildResponse.ID).Return(build.getArtifactChildrenResponse, build.getArtifactChildrenError)
+					if build.buildHasArtifactsResponse {
+						mockArtifactsService.On("DownloadAndUnzipArtifacts", build.triggerBuildResponse.ID, build.parameters.BuildTypeID, tc.multiArtifactsPath).Return(build.downloadError)
+						mockArtifactsService.On("GetAllBuildTypeArtifacts", build.triggerBuildResponse.ID, build.parameters.BuildTypeID).Return(build.getAllBuildTypeArtifactsResponse, build.getAllBuildTypeArtifactsError)
 					}
 				}
 			}
