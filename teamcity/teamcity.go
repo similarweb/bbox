@@ -38,7 +38,6 @@ type Client struct {
 	Template  ITemplateService
 }
 
-// IBuildService defines the interface for build operations in TeamCity.
 type IBuildService interface {
 	GetBuildStatus(buildID int) (types.BuildStatusResponse, error)
 	TriggerBuild(buildTypeID, branchName string, params map[string]string) (types.TriggerBuildWithParametersResponse, error)
