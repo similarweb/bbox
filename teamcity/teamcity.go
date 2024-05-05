@@ -16,6 +16,9 @@ var (
 	_ IArtifactsService = &ArtifactsService{}
 	_ IQueueService     = &QueueService{}
 	_ IBuildService     = &BuildService{}
+	_ IVcsRootsService  = &VcsRootsService{}
+	_ IProjectService   = &ProjectService{}
+	_ ITemplateService  = &TemplateService{}
 )
 
 type Client struct {
@@ -28,6 +31,9 @@ type Client struct {
 	Artifacts IArtifactsService
 	Queue     IQueueService
 	Build     IBuildService
+	VcsRoots  IVcsRootsService
+	Projects  IProjectService
+	Templates ITemplateService
 }
 
 type BasicAuth struct {
@@ -63,6 +69,9 @@ func (c *Client) initializeServices() {
 	c.Artifacts = &ArtifactsService{client: c}
 	c.Queue = &QueueService{client: c}
 	c.Build = &BuildService{client: c}
+	c.VcsRoots = &VcsRootsService{client: c}
+	c.Projects = &ProjectService{client: c}
+	c.Templates = &TemplateService{client: c}
 }
 
 // RequestOption represents an option that can modify an http.Request.
