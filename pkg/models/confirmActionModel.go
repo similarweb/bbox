@@ -30,7 +30,7 @@ func (m ConfirmActionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if userInput == "y" {
 			m.Confirmed = true
 			m.Quitting = true
-		} else if userInput == "n" || userInput == "q" || userInput == "ctrl+c" {
+		} else if userInput == "n" || userInput == "ctrl+c" {
 			m.Quitting = true
 		}
 	}
@@ -44,7 +44,7 @@ func (m ConfirmActionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m ConfirmActionModel) View() string {
 	if !m.Quitting {
-		return "Press 'y' to confirm, 'n' to cancel, or 'q' to quit.\n"
+		return "Press 'y' to confirm or 'n' to cancel.\n"
 	}
 
 	return ""
