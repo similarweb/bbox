@@ -23,7 +23,7 @@ type ProjectTemplatesResponse struct {
 
 type ProjectService service
 
-// getAllProjects retrieves all project IDs available in TeamCity.
+// GetAllProjects retrieves all project IDs available in TeamCity.
 func (project *ProjectService) GetAllProjects() ([]string, error) {
 	req, err := project.client.NewRequestWrapper("GET", "app/rest/projects", nil)
 	if err != nil {

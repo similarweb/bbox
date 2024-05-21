@@ -54,6 +54,10 @@ func parseCombinations(combinations []string) ([]types.BuildParameters, error) {
 
 // parseProperties parses the properties from the command line and returns a map of string to string.
 func parseProperties(properties string) (map[string]string, error) {
+	if properties == "" {
+		log.Debugf("no additional properties found")
+		return nil, nil
+	}
 	propertiesMap := make(map[string]string)
 
 	for _, prop := range strings.Split(properties, "&") {

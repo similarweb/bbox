@@ -1,15 +1,26 @@
 package teamcity
 
 import (
+	"bbox/pkg/types"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
+)
 
-	log "github.com/sirupsen/logrus"
+var (
+	_ IArtifactsService = &ArtifactsService{}
+	_ IQueueService     = &QueueService{}
+	_ IBuildService     = &BuildService{}
+	_ IVcsRootsService  = &VcsRootsService{}
+	_ IProjectService   = &ProjectService{}
+	_ ITemplateService  = &TemplateService{}
 )
 
 type Client struct {
@@ -19,12 +30,48 @@ type Client struct {
 
 	common service
 	// Services of Teamcity
-	Artifacts *ArtifactsService
-	Queue     *QueueService
-	Build     *BuildService
-	VcsRoots  *VcsRootsService
-	Project   *ProjectService
-	Template  *TemplateService
+	Artifacts IArtifactsService
+	Queue     IQueueService
+	Build     IBuildService
+	VcsRoots  IVcsRootsService
+	Project   IProjectService
+	Template  ITemplateService
+}
+
+type IBuildService interface {
+	GetBuildStatus(buildID int) (types.BuildStatusResponse, error)
+	TriggerBuild(buildTypeID, branchName string, params map[string]string) (types.TriggerBuildWithParametersResponse, error)
+	WaitForBuild(buildName string, buildNumber int, timeout time.Duration) (types.BuildStatusResponse, error)
+}
+
+type IArtifactsService interface {
+	BuildHasArtifact(buildID int) bool
+	GetArtifactChildren(buildID int) (types.ArtifactChildren, error)
+	GetArtifactContentByPath(path string) ([]byte, error)
+	GetAllBuildTypeArtifacts(buildID int, buildTypeID string) ([]byte, error)
+	DownloadAndUnzipArtifacts(buildID int, buildTypeID, destPath string) error
+}
+
+type IQueueService interface {
+	ClearQueue() error
+}
+
+type IVcsRootsService interface {
+	GetAllVcsRootsIDs() ([]VcsRoots, error)
+	GetUnusedVcsRootsIDs(allVcsRoots []VcsRoots, allVcsRootsTemplates []string) ([]string, error)
+	DeleteUnusedVcsRoots(allUnusedVcsRoots []string) (int, error)
+	DoesVcsRootHaveInstance(vcsRootID string) (bool, error)
+	DeleteVcsRoot(vcsRootID string) (bool, error)
+	PrintAllVcsRoots(allVcsRoots []string)
+}
+
+type IProjectService interface {
+	GetAllProjects() ([]string, error)
+	GetProjectTemplates(projectID string) ([]string, error)
+}
+
+type ITemplateService interface {
+	GetVcsRootsIDsFromTemplates(templateIDs []string) ([]string, error)
 }
 
 type BasicAuth struct {
@@ -37,7 +84,10 @@ type service struct {
 }
 
 // NewTeamCityClient creates a new TeamCity client.
-func NewTeamCityClient(baseURL *url.URL, username, password string) *Client {
+func NewTeamCityClient(baseURL *url.URL, username, password string) (*Client, error) {
+	if baseURL == nil || baseURL.String() == "" {
+		return nil, errors.New("teamcity-url is required - please provide a valid URL via flag or environment variable")
+	}
 	newClient := &Client{
 		baseURL: baseURL,
 		BasicAuth: &BasicAuth{
@@ -49,17 +99,17 @@ func NewTeamCityClient(baseURL *url.URL, username, password string) *Client {
 
 	newClient.initializeServices()
 
-	return newClient
+	return newClient, nil
 }
 
 func (c *Client) initializeServices() {
 	c.common.client = c
-	c.Artifacts = (*ArtifactsService)(&c.common)
-	c.Queue = (*QueueService)(&c.common)
-	c.Build = (*BuildService)(&c.common)
-	c.VcsRoots = (*VcsRootsService)(&c.common)
-	c.Project = (*ProjectService)(&c.common)
-	c.Template = (*TemplateService)(&c.common)
+	c.Artifacts = &ArtifactsService{client: c}
+	c.Queue = &QueueService{client: c}
+	c.Build = &BuildService{client: c}
+	c.VcsRoots = &VcsRootsService{client: c}
+	c.Project = &ProjectService{client: c}
+	c.Template = &TemplateService{client: c}
 }
 
 // RequestOption represents an option that can modify an http.Request.
@@ -70,7 +120,8 @@ type RequestOption func(req *http.Request)
 // A relative URL can be provided in urlStr, in which case it is resolved relative to the BaseURL of the Client.
 func (c *Client) NewRequestWrapper(method, urlStr string, body interface{}, opts ...RequestOption) (*http.Request, error) {
 	if !strings.HasSuffix(c.baseURL.Path, "/") {
-		return nil, fmt.Errorf("BaseURL must have a trailing slash, but %v does not", c.baseURL)
+		// add trailing slash to baseURL
+		c.baseURL.Path += "/"
 	}
 
 	u, err := c.baseURL.Parse(urlStr)

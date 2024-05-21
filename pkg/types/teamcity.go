@@ -86,6 +86,16 @@ type TriggerBuildWithParametersResponse struct {
 	} `json:"snapshot-dependencies"`
 }
 
+type BuildType struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ProjectName string `json:"projectName"`
+	ProjectID   string `json:"projectId"`
+	Href        string `json:"href"`
+	WebURL      string `json:"webUrl"`
+}
+
 type ArtifactChildren struct {
 	Count int `json:"count"`
 	File  []struct {

@@ -20,3 +20,4 @@ _test/
 
 # tests
 artifacts/
+coverage.*

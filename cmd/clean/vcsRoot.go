@@ -22,7 +22,7 @@ const (
 
 var autoDelete bool
 
-var vcsRootsCmdName string = "vcs"
+var vcsRootsCmdName = "vcs"
 
 var vcsRootsCmd = &cobra.Command{
 	Use:   vcsRootsCmdName,
@@ -39,7 +39,11 @@ var vcsRootsCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		client := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
+		client, err := teamcity.NewTeamCityClient(url, teamcityUsername, teamcityPassword)
+		if err != nil {
+			log.Errorf("error creating TeamCity client: %s", err)
+			os.Exit(1)
+		}
 		logger := log.WithField("teamcityURL", url.String())
 
 		logger.Info("fetching all TeamCity VCS Roots.")
