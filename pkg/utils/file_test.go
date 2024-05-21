@@ -12,7 +12,7 @@ import (
 )
 
 func TestUnzipFile(t *testing.T) {
-	zipFilePath := "./test_files/Archive.zip"
+	zipFilePath := "./testfiles/Archive.zip"
 	destDir := "/tmp"
 
 	// Create a temporary directory for testing

@@ -15,7 +15,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type ArtifactsService service
+type ArtifactsService struct {
+	client *Client
+}
 
 // BuildHasArtifact returns true if the build has artifacts.
 func (as *ArtifactsService) BuildHasArtifact(buildID int) bool {
@@ -107,8 +109,8 @@ func (as *ArtifactsService) GetArtifactContentByPath(path string) ([]byte, error
 	return io.ReadAll(resp.Body)
 }
 
-// getAllBuildTypeArtifacts returns all artifacts from a buildID and buildTypeId as a zip file.
-func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeID string) ([]byte, error) {
+// GetAllBuildTypeArtifacts returns all artifacts from a buildID and buildTypeId as a zip file.
+func (as *ArtifactsService) GetAllBuildTypeArtifacts(buildID int, buildTypeID string) ([]byte, error) {
 	getURL := fmt.Sprintf("downloadArtifacts.html?buildId=%d&buildTypeId=%s", buildID, buildTypeID)
 
 	req, err := as.client.NewRequestWrapper("GET", getURL, nil)
@@ -138,7 +140,7 @@ func (as *ArtifactsService) getAllBuildTypeArtifacts(buildID int, buildTypeID st
 
 // DownloadAndUnzipArtifacts downloads all artifacts  to given path and unzips them.
 func (as *ArtifactsService) DownloadAndUnzipArtifacts(buildID int, buildTypeID, destPath string) error {
-	content, err := as.getAllBuildTypeArtifacts(buildID, buildTypeID)
+	content, err := as.GetAllBuildTypeArtifacts(buildID, buildTypeID)
 	if err != nil {
 		log.Errorf("error getting artifacts content: %s", err)
 		return fmt.Errorf("error getting artifacts content: %w", err)
