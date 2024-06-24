@@ -13,6 +13,17 @@ release:
     owner: infrastructure
     name: bbox
 
+brews:
+ - name: bbox
+    tap:
+      owner: similarweb
+      name: homebrew-tap
+    homepage: "https://github.com/similarweb/bbox"
+    description: "bbox is a CLI tool for interacting with TeamCity and other CI/CD tools."
+    install: |
+      bin.install "bbox"
+    
+
 archives:
   - format: tar.gz
 
