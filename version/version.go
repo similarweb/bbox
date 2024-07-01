@@ -1,5 +1,7 @@
 package version
 
+import "fmt"
+
 // Set with LDFLAGS.
 var (
 	// Version of the release, the value injected by .goreleaser
