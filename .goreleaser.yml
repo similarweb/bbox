@@ -4,15 +4,23 @@ builds:
     goos:
       - linux
       - darwin
-    ldflags: "-X gitlab.int.similarweb.io/infrastructure/bbox/version.version={{.Version}}"
+      - windows
     goarch:
       - amd64
       - arm64
-release:
-  gitlab:
-    owner: infrastructure
-    name: bbox
+    ldflags: 
+      - -s -w -X bbox/version.version={{.Version}} -X bbox/version.commit={{.Commit}} -X bbox/version.date={{.Date}} -X bbox/version.builtBy=goreleaser
 
+archives:
+  - format: tar.gz
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      amd64: x86_64
+      arm64: ARM64
+
+      
 brews:
  - name: bbox
     tap:
@@ -22,14 +30,3 @@ brews:
     description: "bbox is a CLI tool for interacting with TeamCity and other CI/CD tools."
     install: |
       bin.install "bbox"
-    
-
-archives:
-  - format: tar.gz
-
-gitlab_urls:
-  api: https://gitlab.int.similarweb.io/api/v4/
-  download: https://gitlab.int.similarweb.io
-  skip_tls_verify: true
-  use_package_registry: true
-
