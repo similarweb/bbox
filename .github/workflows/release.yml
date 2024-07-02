@@ -2,13 +2,13 @@ name: Release
 on:
   push:
     tags:
-    - 'v*.*.*'
-    - 'v*.*.*-rc*'
-  branches:
-    - master
+      - 'v*.*.*'
+      - 'v*.*.*-rc*'
+    branches:
+      - master
   pull_request:
     branches:
-    - master
+      - master
 
 jobs:
   goreleaser:
