@@ -20,6 +20,13 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.ref }}
+
+      -
+        name: Print commit info
+        run: |
+          echo "GITHUB_REF: ${{ github.ref }}"
+          echo "GITHUB_SHA: ${{ github.sha }}"
+          git log -1
       - 
         name: Set up Go
         uses: actions/setup-go@v5
