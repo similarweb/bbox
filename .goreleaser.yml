@@ -14,17 +14,12 @@ builds:
 
 archives:
   - format: tar.gz
-    replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      amd64: x86_64
-      arm64: ARM64
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
       
 brews:
   - name: bbox
-    tap:
+    repository:
       owner: similarweb
       name: homebrew-tap
     homepage: "https://github.com/similarweb/bbox"
