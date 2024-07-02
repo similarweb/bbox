@@ -22,7 +22,7 @@ archives:
 
       
 brews:
- - name: bbox
+  - name: bbox
     tap:
       owner: similarweb
       name: homebrew-tap
