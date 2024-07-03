@@ -18,6 +18,11 @@ jobs:
         with:
           fetch-depth: 0
       - 
+        name: Debug Token Permissions
+        run: |
+          echo "Checking permissions for GITHUB_TOKEN..."
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/rate_limit
+      - 
         name: Set up Go
         uses: actions/setup-go@v5
         with:
