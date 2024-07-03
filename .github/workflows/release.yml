@@ -7,7 +7,10 @@ on:
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
-    permissions: write-all 
+    permissions:
+      contents: write
+      actions: write
+      repository-projects: write 
     steps:
       - 
         name: Checkout
@@ -31,7 +34,10 @@ jobs:
   push:
     runs-on: ubuntu-latest
     needs: goreleaser
-    permissions: write-all
+    permissions:
+      contents: write
+      actions: write
+      repository-projects: write 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
