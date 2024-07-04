@@ -22,7 +22,7 @@ brews:
     repository:
       owner: similarweb
       name: homebrew-tap
-    homepage: "https://github.com/similarweb/bbox"
+    homepage: "https://github.com/similarweb"
     description: "bbox is a CLI tool for interacting with TeamCity and other CI/CD tools."
     install: |
       bin.install "bbox"
