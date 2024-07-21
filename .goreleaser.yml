@@ -16,13 +16,3 @@ archives:
   - format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
-      
-brews:
-  - name: bbox
-    repository:
-      owner: similarweb
-      name: homebrew-tap
-    homepage: "https://github.com/similarweb"
-    description: "bbox is a CLI tool for interacting with TeamCity and other CI/CD tools."
-    install: |
-      bin.install "bbox"
