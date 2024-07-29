@@ -2,6 +2,7 @@
 # BBOX
 
 <img src="./assets/logo.svg" align="right" height="400"/>
+
 `bbox` is a handy CLI tool for working with TeamCity. Whether you need to kick off builds, manage the build queue, or clean up unused resources, bbox makes these tasks simpler and more efficient. It's designed to be versatile and user-friendly, helping you streamline your continuous integration workflows.
 
 * [Installation](#installation)
