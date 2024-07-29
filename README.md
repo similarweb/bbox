@@ -16,9 +16,9 @@
 * [Acknowledgements](#acknowledgements)
 * [Authors](#authors)
 
-<div style="text-align: center;">
+<p align="center">
     <img src="./assets/logo.svg" height="500">
-</div>
+</p>
 
 ## Installation
 
