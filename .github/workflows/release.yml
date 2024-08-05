@@ -2,7 +2,8 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
+      - 'v*.*.*-rc*'
 
 permissions:
       contents: write
@@ -48,4 +49,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: similarweb/bbox:latest
+          tags: similarweb/bbox:${{ github.ref_name }}, similarweb/bbox:latest

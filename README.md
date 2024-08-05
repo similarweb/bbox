@@ -11,14 +11,15 @@
 * [Commands](#commands)
 * [Contributing](#contributing)
 * [License](#license)
-* [Acknowledgements](#acknowledgements)
 * [Authors](#authors)
 
 ## Installation
 
 ### Binary
+
 You can download a binary for Linux or OS X on the [GitHub releases page](https://github.com/similarweb/bbox/releases). You
 can use `curl` or `wget` to download it. Don't forget to `chmod +x` the file!
+
 ### Docker
 
 Pull `bbox` from the Docker repository:
@@ -32,6 +33,7 @@ Or run `bbox` from source:
 ```bash
 git clone https://github.com/similarweb/bbox.git
 ```
+
 ## Usage
 
 If you are within the cloned repository, execute bbox using:
@@ -45,25 +47,22 @@ For Docker users, run:
 ```bash
 docker run -it bbox [command] [Flags]
 ```
-* Note: The -it flag is crucial when running bbox with Docker. It ensures that the container runs interactively, allowing you to provide input and receive output in real-time.
 
+* Note: The -it flag is crucial when running bbox with Docker. It ensures that the container runs interactively, allowing you to provide input and receive output in real-time.
 
 ## Global Flags
 
 Global flags can be used with any bbox command to control its behavior:
 
-| Flags                  | Description                                                           | 
+| Flags                  | Description                                                           |
 |-------------------------------|-----------------------------------------------------------------------|
 | `-h, --help`                  | Display help for Bbox or any specific command. Use `bbox -h` for general help and `bbox [command] -h` for command-specific help.                                                         |
 | `-l, --log-level string`      | Log level (debug, info, warn, error, fatal, panic) (default "info")   |
-| `--teamcity-url string`       | Teamcity URL (default "https://teamcity.similarweb.io/")              |
+| `--teamcity-url string`       | Teamcity URL (default "<https://teamcity.similarweb.io/>")              |
 | `--teamcity-username string`  | Teamcity username                                                     |
 | `--teamcity-password string`  | Teamcity password                                                     |
 
-
-
 ## Commands
-
 
 ### Trigger Command
 
@@ -72,8 +71,6 @@ The trigger command is used to trigger a single TeamCity build. It allows you to
 #### Usage
 
 `go run bbox trigger [flags]`
-
-
 
 #### Trigger Flags
 
@@ -88,7 +85,6 @@ The trigger command is used to trigger a single TeamCity build. It allows you to
 | `-w, --wait-for-build`        | Wait for build to finish and get status           |
 | `-t, --wait-timeout duration` | Timeout for waiting for build to finish (default 15m0s) |
 
-
 #### Example
 
 ```bash
@@ -98,6 +94,7 @@ go run main.go trigger \
     --build-type-id "<BuildIDType>" \
     --properties "key1=value1,key2=value2"
 ```
+
 ### Multi-Trigger Command
 
 The multi-trigger command is used to trigger multiple TeamCity builds simultaneously. It accepts a combination of build parameters, allowing for more complex and automated build processes.
@@ -111,12 +108,12 @@ The multi-trigger command is used to trigger multiple TeamCity builds simultaneo
 | Flags| Description|
 |------|------------|
 | `--artifacts-path string`| Path to download artifacts to (default "./")|
-| `-c, --build-params-combination strings` | Combinations as 'buildTypeID;branchName;downloadArtifactsBool;key1=value1&key2=value2' format. Repeatable. Example: 'byBuildId;master;true;key=value&key2=value2' |
+| `-c, --build-params-combination strings` | Combinations as 'buildTypeID;branchName;downloadArtifactsBool;key1=value1&key2=value2' format. Repeatable. Example: 'myBuildId;master;true;key=value&key2=value2' |
 | `--require-artifacts`| If downloadArtifactsBool is true, and no artifacts found, return an error|
 | `-w, --wait-for-builds`| Wait for builds to finish and get status (default true)|
 | `-t, --wait-timeout duration`| Timeout for waiting for builds to finish, default is 15 minutes (default 15m0s)|
 
-#### Example
+#### Example 1
 
 ```bash
 go run main.go multi-trigger \
@@ -125,6 +122,25 @@ go run main.go multi-trigger \
     --build-params-combination "<BuildIDType>;<Branch>;<Properties key=value,key=value>"
 ```
 
+#### Example 2
+
+```bash
+go run main.go multi-trigger \
+    --teamcity-username "<Username>" \
+    --teamcity-password '<Password>' \
+    --build-params-combination "buildID123;develop;false;env=staging&debug=true>"
+```
+
+#### Example 3
+
+```bash
+go run main.go multi-trigger \
+    --teamcity-username "<Username>" \
+    --teamcity-password '<Password>' \
+    --artifacts-path "./artifacts" \
+    --build-params-combination "BuildID;feature-branch;true;env=production&logLevel=verbose>"
+    --wait-timeout 30m
+```
 
 ### Clean Command
 
@@ -136,14 +152,14 @@ The `clean` command is used to remove unused or unwanted resources in a TeamCity
 
 #### Available Sub-Commands
 
-- `queue` Clear the TeamCity Build Queue
-- `vcs` Delete all unused VCS Roots
+* `queue` Clear the TeamCity Build Queue
+* `vcs` Delete all unused VCS Roots
 
 ### Clean Queue
 
 This sub-command clears the build queue in a TeamCity server environment. It identifies all queued builds and removes them from the queue, ensuring that no pending builds remain.
 
-##### Usage
+#### Usage
 
 `go run bbox clean queue [flags]`
 
@@ -151,7 +167,7 @@ This sub-command clears the build queue in a TeamCity server environment. It ide
 
 This sub-command identifies, lists, and deletes all unused VCS Roots in a TeamCity server environment. **An unused VCS Root is defined as a VCS Root that is neither linked to any build configurations nor included in any build templates**. This helps in keeping the TeamCity environment clean and free of unnecessary resources.
 
-##### Usage
+#### Usage
 
 `go run bbox clean vcs [flags]`
 
@@ -184,11 +200,10 @@ The `completion` command generates the autocompletion script for `bbox` for the 
 
 #### Available Sub-Commands
 
-- `bash` Generate the autocompletion script for Bash
-- `fish` Generate the autocompletion script for Fish
-- `powershell` Generate the autocompletion script for PowerShell
-- `zsh` Generate the autocompletion script for Zsh
-
+* `bash` Generate the autocompletion script for Bash
+* `fish` Generate the autocompletion script for Fish
+* `powershell` Generate the autocompletion script for PowerShell
+* `zsh` Generate the autocompletion script for Zsh
 
 ### Bash
 
@@ -208,13 +223,17 @@ source <(bbox completion bash)
 
 To load completions for every new session, execute once:
 
-##### Linux:
+##### Linux
 
-	bbox completion bash > /etc/bash_completion.d/bbox
+```bash
+bbox completion bash > /etc/bash_completion.d/bbox
+```
 
-##### macOS:
+##### macOS
 
-	bbox completion bash > $(brew --prefix)/etc/bash_completion.d/bbox
+```bash
+bbox completion bash > $(brew --prefix)/etc/bash_completion.d/bbox
+```
 
 * Note: You will need to start a new shell for this setup to take effect.
 
@@ -236,7 +255,9 @@ bbox completion fish | source
 
 To load completions for every new session, execute once:
 
-    bbox completion fish > ~/.config/fish/completions/bbox.fish
+```bash
+bbox completion fish > ~/.config/fish/completions/bbox.fish
+```
 
 * Note: You will need to start a new shell for this setup to take effect.
 
@@ -255,6 +276,7 @@ To load completions in your current shell session:
 ```bash
 bbox completion powershell | Out-String | Invoke-Expression
 ```
+
 To load completions for every new session, add the output of the above command
 to your powershell profile.
 
@@ -282,15 +304,20 @@ source <(bbox completion zsh)
 
 To load completions for every new session, execute once:
 
-##### Linux:
+##### Linux
 
-	bbox completion zsh > "${fpath[1]}/_bbox"
+```bash
+bbox completion zsh > "${fpath[1]}/_bbox"
+```
 
-##### macOS:
+##### macOS
 
-	bbox completion zsh > $(brew --prefix)/share/zsh/site-functions/_bbox
+```bash
+bbox completion zsh > $(brew --prefix)/share/zsh/site-functions/_bbox
+```
 
 * Note: You will need to start a new shell for this setup to take effect.
+
 ### Version Command
 
 Print the version number of bbox
@@ -298,31 +325,21 @@ Print the version number of bbox
 #### Usage
 
 `bbox version [flags]`
+
 ## Contributing
 
 Contributions are always welcome!
 
-See `contributing.md` for ways to get started.
+See `CONTRIBUTING.md` for ways to get started.
 
 Please adhere to this project's `code of conduct`.
-
 
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
 
-
-## Acknowledgements
-
- - [Awesome Readme Templates](https://awesomeopensource.com/project/elangosundar/awesome-README-templates)
- - [Awesome README](https://github.com/matiassingers/awesome-readme)
- - [How to write a Good readme](https://bulldogjob.com/news/449-how-to-write-a-good-readme-for-your-github-project)
-
-
 ## Authors
 
-- [@cregev](https://www.github.com/cregev)
-- [@MorErel](https://www.github.com/MorErel)
-- [@OzBena](https://www.github.com/OzBena)
-
-
+* [@cregev](https://www.github.com/cregev)
+* [@MorErel](https://www.github.com/MorErel)
+* [@OzBena](https://www.github.com/OzBena)
