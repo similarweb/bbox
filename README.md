@@ -113,33 +113,16 @@ The multi-trigger command is used to trigger multiple TeamCity builds simultaneo
 | `-w, --wait-for-builds`| Wait for builds to finish and get status (default true)|
 | `-t, --wait-timeout duration`| Timeout for waiting for builds to finish, default is 15 minutes (default 15m0s)|
 
-#### Example 1
+#### Example
 
 ```bash
 go run main.go multi-trigger \
     --teamcity-username "<Username>" \
     --teamcity-password '<Password>' \
-    --build-params-combination "<BuildIDType>;<Branch>;<Properties key=value,key=value>"
-```
-
-#### Example 2
-
-```bash
-go run main.go multi-trigger \
-    --teamcity-username "<Username>" \
-    --teamcity-password '<Password>' \
+    --build-params-combination "myBuildId;master;true;env=production&logLevel=verbose"
     --build-params-combination "buildID123;develop;false;env=staging&debug=true>"
-```
-
-#### Example 3
-
-```bash
-go run main.go multi-trigger \
-    --teamcity-username "<Username>" \
-    --teamcity-password '<Password>' \
+    --build-params-combination "buildID;feature-branch;true;env=testing&ogLevel=info>"
     --artifacts-path "./artifacts" \
-    --build-params-combination "BuildID;feature-branch;true;env=production&logLevel=verbose>"
-    --wait-timeout 30m
 ```
 
 ### Clean Command
