@@ -96,6 +96,7 @@ func TestTriggerBuilds(t *testing.T) {
 			multiArtifactsPath: "artifacts/",
 			requireArtifacts:   true,
 			expectedResults:    []types.BuildResult{},
+			exitError:          errors.New("error waiting for build: this is a test error"),
 			buildsTriggered: []buildTestCase{
 				{
 					parameters: types.BuildParameters{
@@ -112,6 +113,7 @@ func TestTriggerBuilds(t *testing.T) {
 							Name: "failedBuild",
 						},
 					},
+					waitForBuildError:    errors.New("this is a test error"),
 					triggerShouldFail:    false,
 					waitForBuildResponse: types.BuildStatusResponse{ID: 123, Status: "FAILURE", State: "finished"},
 					waitShouldFail:       true,
