@@ -1,24 +1,17 @@
 project_name: bbox
+version: 2
 builds:
   - env: [CGO_ENABLED=0]
     goos:
       - linux
       - darwin
-    ldflags: "-X gitlab.int.similarweb.io/infrastructure/bbox/version.version={{.Version}}"
+      - windows
     goarch:
       - amd64
       - arm64
-release:
-  gitlab:
-    owner: infrastructure
-    name: bbox
+    ldflags: 
+      - -s -w -X bbox/version.version={{.Version}} -X bbox/version.commit={{.Commit}} -X bbox/version.date={{.Date}} -X bbox/version.builtBy=goreleaser
 
 archives:
   - format: tar.gz
-
-gitlab_urls:
-  api: https://gitlab.int.similarweb.io/api/v4/
-  download: https://gitlab.int.similarweb.io
-  skip_tls_verify: true
-  use_package_registry: true
-
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
