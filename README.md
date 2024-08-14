@@ -313,9 +313,7 @@ Print the version number of bbox
 
 Contributions are always welcome!
 
-See `CONTRIBUTING.md` for ways to get started.
-
-Please adhere to this project's `code of conduct`.
+See [CONTRIBUTING](CONTRIBUTING.md) for ways to get started.
 
 ## License
 
