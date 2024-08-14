@@ -4,19 +4,14 @@ Thank you for your interest in contributing to BBOX! We appreciate your efforts 
 
 ## Table of Contents
 
-1. [Code of Conduct](#code-of-conduct)
-2. [How to Report a Bug](#how-to-report-a-bug)
-3. [How to Request a Feature](#how-to-request-a-feature)
-4. [How to Submit a Pull Request](#how-to-submit-a-pull-request)
-5. [Commit Message Convention](#commit-message-convention)
-6. [Style Guide](#style-guide)
-7. [Testing](#testing)
-8. [Documentation](#documentation)
-9. [Communication](#communication)
-
-## Code of Conduct
-
-Please read our [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a welcoming environment for all contributors.
+1. [How to Report a Bug](#how-to-report-a-bug)
+2. [How to Request a Feature](#how-to-request-a-feature)
+3. [How to Submit a Pull Request](#how-to-submit-a-pull-request)
+4. [Commit Message Convention](#commit-message-convention)
+5. [Style Guide](#style-guide)
+6. [Testing](#testing)
+7. [Documentation](#documentation)
+8. [Communication](#communication)
 
 ## How to Report a Bug
 
@@ -79,7 +74,7 @@ Please update the documentation to reflect any changes you make to the codebase:
 - **Code Documentation**: Include inline comments and function/method docstrings as needed.
 - **Project Documentation**: Update the `README.md` or other relevant docs with information about new features or updates.
 
-## Documentation for Cobra Commands
+### Documentation for Cobra Commands
 
 When adding or updating Cobra commands in BBOX, it is important to include both short and long descriptions to provide clarity for users:
 
@@ -87,7 +82,7 @@ When adding or updating Cobra commands in BBOX, it is important to include both 
 
 - **Long Description**: This should provide a more detailed explanation of what the command does, including any important context, usage notes, or examples. The long description is displayed when users request detailed help for a command.
 
-### Example Structure
+#### Example Structure
 
 ```go
 var exampleCmd = &cobra.Command{
