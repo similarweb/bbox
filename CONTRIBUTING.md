@@ -6,12 +6,13 @@ Thank you for your interest in contributing to BBOX! We appreciate your efforts 
 
 1. [How to Report a Bug](#how-to-report-a-bug)
 2. [How to Request a Feature](#how-to-request-a-feature)
-3. [How to Submit a Pull Request](#how-to-submit-a-pull-request)
-4. [Commit Message Convention](#commit-message-convention)
-5. [Style Guide](#style-guide)
-6. [Testing](#testing)
-7. [Documentation](#documentation)
-8. [Communication](#communication)
+3. [How to Suggest Documentation Improvements](#how-to-suggest-documentation-improvements)
+4. [How to Submit a Pull Request](#how-to-submit-a-pull-request)
+5. [Commit Message Convention](#commit-message-convention)
+6. [Style Guide](#style-guide)
+7. [Testing](#testing)
+8. [Documentation](#documentation)
+9. [Communication](#communication)
 
 ## How to Report a Bug
 
@@ -28,6 +29,17 @@ To suggest a new feature or enhancement:
 1. **Check Existing Requests**: Browse the [existing issues](https://github.com/similarweb/bbox/issues) to see if a similar request has already been made.
 2. **Use the Feature Request Template**: If your idea is unique, [open a new feature request](https://github.com/similarweb/bbox/issues/new/choose) using the "Feature Request" template.
 3. **Describe Your Idea**: Provide a clear and concise description of your proposed feature, including its potential benefits.
+
+## How to Suggest Documentation Improvements
+
+To suggest changes or additions to the documentation:
+
+1. **Check Existing Requests**: Browse the [existing issues](https://github.com/similarweb/bbox/issues) to see if a similar request has already been made.
+2. **Use the Documentation Request Template**: If you have ideas on how to improve the documentation, [open a new documentation request](https://github.com/similarweb/bbox/issues/new/choose) using the "Documentation Request" template.
+3. **Provide Specific Suggestions**: Clearly specify which part of the documentation needs improvement and offer your suggestions for what could be added or changed.
+4. **Add Context**: Include any additional context or examples that might help clarify your request.
+
+Your feedback helps us make the documentation better for everyone!
 
 ## How to Submit a Pull Request
 
