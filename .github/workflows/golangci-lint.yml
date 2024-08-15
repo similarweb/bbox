@@ -34,5 +34,5 @@ jobs:
         with:
           version: latest 
           only-new-issues: true
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
