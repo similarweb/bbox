@@ -15,9 +15,9 @@ jobs:
 
     permissions:
       contents: read
-      packages: read
-      # To report GitHub Actions status checks
+      pull-requests: read
       statuses: write
+      checks: write
 
     steps:
       - name: Checkout code
@@ -25,9 +25,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Super-linter
-        uses: github/super-linter@v6
-        env:
-          VALIDATE_ALL_CODEBASE: false
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_GO: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.3
+
+      - name: Golangci-lint
+        uses: golangci/golangci-lint-action@v6.1.0
+        with:
+          version: latest 
+          only-new-issues: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
