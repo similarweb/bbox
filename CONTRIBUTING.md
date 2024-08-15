@@ -47,23 +47,29 @@ To contribute code:
 
 1. **Fork the Repository**: Create a personal fork of the repository on GitHub.
 2. **Clone Your Fork**: Clone your fork to your local machine.
-3. **Create a New Branch**: Follow the branch naming convention provided in the [Commit Message Convention](#commit-message-convention) section.
+3. **Create a New Branch**: Follow the branch naming convention provided in the [Brach Naming Convention](#branch-naming-convention) section.
 4. **Make Your Changes**: Implement your changes in your branch.
 5. **Run Linter**: Ensure your code passes `golangci-lint`.
 6. **Test Your Changes**: Write tests for your code and ensure all tests pass.
 7. **Submit a Pull Request**: Push your branch to GitHub and [open a pull request](https://github.com/similarweb/bbox/compare) against the main branch.
 
-## Commit Message Convention
+## Branch Naming Convention
 
 We follow a specific convention for commit messages to maintain consistency and clarity. Please use the following format:
 
 ```bash
-[type] [scope] Summary
+[type]/[scope]_Summary
 ```
 
 - **Type**: The type of change (e.g., feat, fix, improve, cleanup, refactor, revert).
 - **Scope**: The scope of the change (e.g., admin, cli, docker, multi-trigger, test, ci, build, version, doc, auth).
 - **Summary**: A brief, self-explanatory description of the change in present tense imperative, starting with a capital letter and no period at the end.
+
+For example:
+
+```bash
+feat/clean_add-new-clean-feature
+```
 
 ## Style Guide
 
