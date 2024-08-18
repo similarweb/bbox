@@ -309,6 +309,10 @@ Print the version number of bbox
 
 `bbox version [flags]`
 
+|Flags| Description|
+|------|----------|
+|`-d, --describe` | Return full version description|
+
 ## Contributing
 
 Contributions are always welcome!

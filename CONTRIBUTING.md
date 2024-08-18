@@ -8,7 +8,7 @@ Thank you for your interest in contributing to BBOX! We appreciate your efforts 
 2. [How to Request a Feature](#how-to-request-a-feature)
 3. [How to Suggest Documentation Improvements](#how-to-suggest-documentation-improvements)
 4. [How to Submit a Pull Request](#how-to-submit-a-pull-request)
-5. [Commit Message Convention](#commit-message-convention)
+5. [Branch Naming Convention](#branch-naming-convention)
 6. [Style Guide](#style-guide)
 7. [Testing](#testing)
 8. [Documentation](#documentation)
@@ -47,7 +47,7 @@ To contribute code:
 
 1. **Fork the Repository**: Create a personal fork of the repository on GitHub.
 2. **Clone Your Fork**: Clone your fork to your local machine.
-3. **Create a New Branch**: Follow the branch naming convention provided in the [Brach Naming Convention](#branch-naming-convention) section.
+3. **Create a New Branch**: Follow the branch naming convention provided in the [Branch Naming Convention](#branch-naming-convention) section.
 4. **Make Your Changes**: Implement your changes in your branch.
 5. **Run Linter**: Ensure your code passes `golangci-lint`.
 6. **Test Your Changes**: Write tests for your code and ensure all tests pass.

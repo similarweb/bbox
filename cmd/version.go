@@ -11,7 +11,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var describeVersion bool
+
 func init() {
+	versionCmd.Flags().BoolVarP(&describeVersion, "describe", "d", false, "Return full version description")
 	RootCmd.AddCommand(versionCmd)
 }
 
@@ -20,6 +23,11 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of bbox",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("bbox version: %s", version.GetVersion())
+		if (describeVersion) {
+			fmt.Println("bbox version:", version.GetFormattedVersion())
+			return
+		} else {
+			fmt.Println("bbox version:", version.GetVersion())
+		}
 	},
 }

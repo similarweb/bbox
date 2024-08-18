@@ -1,20 +1,35 @@
 package version
 
-import "fmt"
-
-// Set with LDFLAGS.
-var (
-	// Version of the release, the value injected by .goreleaser
-	version = `{{.Version}}`
-
-	// Commit hash of the release, the value injected by .goreleaser
-	commit = `{{.Commit}}`
+import (
+	"fmt"
+	"os/exec"
+	"strings"
 )
+
+func ExecuteGitCommand(args ...string) string {
+	cmd := exec.Command("git", args...)
+	out, err := cmd.Output()
+	if err != nil {
+		return "unknown"
+	}
+	return strings.TrimSpace(string(out))
+}
+
+var (
+	// Version of the release, dynamically fetched from git
+	version = ExecuteGitCommand("describe", "--tags", "--abbrev=0")
+
+	// Commit hash of the release, dynamically fetched from git
+	commit = ExecuteGitCommand("rev-parse", "HEAD")
+
+	// Date of the commit, dynamically fetched from git
+	date = ExecuteGitCommand("show", "-s", "--format=%ci", "HEAD")
+)
+
 func GetVersion() string {
 	return version
 }
 
-// GetFormattedVersion returns the current version and commit hash
 func GetFormattedVersion() string {
-	return fmt.Sprintf("%s (%s)", version, commit)
+	return fmt.Sprintf("%s (%s, %s)", version, commit, date)
 }

@@ -9,8 +9,6 @@ builds:
     goarch:
       - amd64
       - arm64
-    ldflags: 
-      - -s -w -X bbox/version.version={{.Version}} -X bbox/version.commit={{.Commit}} -X bbox/version.date={{.Date}} -X bbox/version.builtBy=goreleaser
 
 archives:
   - format: tar.gz
