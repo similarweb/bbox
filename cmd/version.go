@@ -20,6 +20,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of bbox",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("bbox version: %s", version.GetVersion())
+		fmt.Println("bbox version:", version.GetFormattedVersion())
 	},
 }

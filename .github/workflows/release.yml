@@ -4,6 +4,8 @@ on:
     tags:
       - 'v*.*.*'
       - 'v*.*.*-rc*'
+    branches:
+      - master
 
 permissions:
       contents: write
