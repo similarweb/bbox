@@ -21,7 +21,6 @@ const (
 )
 
 var autoDelete bool
-
 var vcsRootsCmdName = "vcs"
 
 var vcsRootsCmd = &cobra.Command{

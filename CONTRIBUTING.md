@@ -47,23 +47,29 @@ To contribute code:
 
 1. **Fork the Repository**: Create a personal fork of the repository on GitHub.
 2. **Clone Your Fork**: Clone your fork to your local machine.
-3. **Create a New Branch**: Follow the branch naming convention provided in the [Commit Message Convention](#commit-message-convention) section.
+3. **Create a New Branch**: Follow the branch naming convention provided in the [Brach Naming Convention](#branch-naming-convention) section.
 4. **Make Your Changes**: Implement your changes in your branch.
 5. **Run Linter**: Ensure your code passes `golangci-lint`.
 6. **Test Your Changes**: Write tests for your code and ensure all tests pass.
 7. **Submit a Pull Request**: Push your branch to GitHub and [open a pull request](https://github.com/similarweb/bbox/compare) against the main branch.
 
-## Commit Message Convention
+## Branch Naming Convention
 
 We follow a specific convention for commit messages to maintain consistency and clarity. Please use the following format:
 
 ```bash
-[type] [scope] Summary
+[type]/[scope]_Summary
 ```
 
 - **Type**: The type of change (e.g., feat, fix, improve, cleanup, refactor, revert).
 - **Scope**: The scope of the change (e.g., admin, cli, docker, multi-trigger, test, ci, build, version, doc, auth).
 - **Summary**: A brief, self-explanatory description of the change in present tense imperative, starting with a capital letter and no period at the end.
+
+For example:
+
+```bash
+feat/clean_add-new-clean-feature
+```
 
 ## Style Guide
 
@@ -76,8 +82,87 @@ Please adhere to the following coding standards:
 
 We have a tests pipeline in place to automatically run tests against your code changes. You don't need to run the tests manually, but you must ensure that your code adheres to the project's testing standards and does not introduce any issues.
 
-- **Write Tests**: For any new features or bug fixes, write corresponding tests as part of your contribution.
-- **Adhere to the Testing Pipeline**: Stick to the existing testing pipeline to maintain the stability and reliability of the codebase.
+### How to Write Proper Tests
+
+To maintain the quality and reliability of our codebase, we require that all new code contributions include corresponding tests. Here are some guidelines to help you write effective tests:
+
+1. Use Descriptive Test Names:
+
+    - Each test should have a clear and descriptive name that indicates what the test is verifying.
+    - Example: TestTrigger_SuccessfulTriggerWithoutWait is better than TestTrigger.
+
+2. Structure Your Tests:
+
+    - Use t.Run() to create subtests for different scenarios within the same test function.
+
+    - Organize your test data in a struct to handle various input and expected output cases.
+
+3. Mock External Dependencies:
+
+    - When writing tests for functions that interact with external services, use mocking to simulate those services.
+
+    - Utilize the testutils package to create mock services, as shown in the example below.
+
+4. Test a Range of Scenarios:
+
+    - Your tests should cover different scenarios, including success, failure, and edge cases.
+
+    - Ensure that you test with both typical and extreme inputs.
+
+5. Assert Expectations:
+
+    - Use AssertExpectations() to ensure that all mocked methods were called with the expected parameters and that the expected outcomes were met.
+
+6. Example Test Structure:
+
+    ```go
+    func TestTrigger(t *testing.T) {
+        tests := []struct {
+            name        string
+            buildTypeID string
+            branchName  string
+            // Other fields...
+        }{
+            {
+                name:        "Successful Trigger without Wait",
+                buildTypeID: "bt123",
+                branchName:  "master",
+                // Set other fields...
+            },
+            // Add more test cases...
+        }
+
+        for _, tt := range tests {
+            t.Run(tt.name, func(t *testing.T) {
+                mockBuild := new(testutils.MockBuildService)
+                mockArtifacts := new(testutils.MockArtifactsService)
+
+                client := &teamcity.Client{
+                    Build:     mockBuild,
+                    Artifacts: mockArtifacts,
+                }
+
+                // Set expectations on the mocks
+                mockBuild.On("TriggerBuild", tt.buildTypeID, tt.branchName, tt.properties).Return(tt.triggerBuildResponse, tt.waitForBuildError)
+                
+                // Call the function under test
+                trigger(client, tt.buildTypeID, tt.branchName, tt.artifactsPath, tt.properties, tt.requireArtifacts, tt.waitForBuild, tt.downloadArtifacts, tt.waitForBuildTimeout)
+
+                // Assert that the expectations were met
+                mockBuild.AssertExpectations(t)
+                mockArtifacts.AssertExpectations(t)
+            })
+        }
+    }
+    ```
+
+7. Running Tests:
+
+    - You don't need to manually run the tests; our CI pipeline will automatically execute them whenever you push changes or create a pull request.
+
+    - However, you can run the tests locally using go test ./... -v if you want to verify them before pushing.
+
+By following these guidelines, you'll help ensure that your contributions are robust, reliable, and integrate smoothly with the existing codebase.
 
 ## Documentation
 

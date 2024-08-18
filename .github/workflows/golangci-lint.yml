@@ -1,0 +1,35 @@
+name: Lint
+
+on:
+  push:
+    branches-ignore: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  run-lint:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+      checks: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.3
+
+      - name: Golangci-lint
+        uses: golangci/golangci-lint-action@v6.1.0
+        with:
+          version: latest 
+          only-new-issues: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
