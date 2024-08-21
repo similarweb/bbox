@@ -1,7 +1,6 @@
 package utils_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,7 +15,7 @@ func TestUnzipFile(t *testing.T) {
 	destDir := "/tmp"
 
 	// Create a temporary directory for testing
-	tempDir, err := ioutil.TempDir("", "unzip_test")
+	tempDir, err := os.MkdirTemp("", "unzip_test")
 	assert.NoError(t, err)
 	defer os.RemoveAll(tempDir)
 

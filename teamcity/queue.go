@@ -3,7 +3,6 @@ package teamcity
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -31,7 +30,7 @@ func (qs *QueueService) ClearQueue() error {
 
 	// Check the response. Expecting HTTP Status No Content (204) or OK (200) as a success indicator.
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNoContent {
-		bodyBytes, _ := ioutil.ReadAll(response.Body)
+		bodyBytes, _ := io.ReadAll(response.Body)
 		return fmt.Errorf("failed to clear the queue, status code: %d, response: %s", response.StatusCode, string(bodyBytes))
 	}
 

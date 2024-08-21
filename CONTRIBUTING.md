@@ -9,10 +9,11 @@ Thank you for your interest in contributing to BBOX! We appreciate your efforts 
 3. [How to Suggest Documentation Improvements](#how-to-suggest-documentation-improvements)
 4. [How to Submit a Pull Request](#how-to-submit-a-pull-request)
 5. [Branch Naming Convention](#branch-naming-convention)
-6. [Style Guide](#style-guide)
-7. [Testing](#testing)
-8. [Documentation](#documentation)
-9. [Communication](#communication)
+6. [Versioning and Tagging Workflow](#versioning-and-tagging-workflow)
+7. [Style Guide](#style-guide)
+8. [Testing](#testing)
+9. [Documentation](#documentation)
+10. [Communication](#communication)
 
 ## How to Report a Bug
 
@@ -70,6 +71,53 @@ For example:
 ```bash
 feat/clean_add-new-clean-feature
 ```
+
+## Versioning and Tagging Workflow
+
+BBOX uses a versioning and tagging system to manage releases, following semantic versioning principles. Here’s how the process works:
+
+### Semantic Versioning
+
+The version number in `version/version.txt` follows semantic versioning:
+
+- **MAJOR** version (`v1.0.0`) is incremented when you make incompatible API changes.
+- **MINOR** version (`v1.1.0`) is incremented when you add functionality in a backward-compatible manner.
+- **PATCH** version (`v1.1.1`) is incremented when you make backward-compatible bug fixes.
+- Additional labels for pre-release and build metadata (e.g., `v1.1.0-rc1`) are available as extensions to the MAJOR.MINOR.PATCH format.
+
+### Versioning Workflow
+
+1. **Updating the Version**:
+   - Before submitting a Pull Request (PR), update the `version.txt` file with the new version number based on the changes you are introducing (e.g., `v1.1.0` or `v1.1.0-rc1` for release candidates).
+
+2. **Committing the Version Change**:
+   - Commit the change to `version.txt` with a descriptive commit message following our convention.
+   - For example: `release/version_Update-to-v1.1.0`.
+
+3. **Submit a Pull Request**:
+   - Once the version update is ready, submit your PR for review. The version change will only take effect after the PR is approved and merged into the `master` branch.
+
+4. **Automatic Tagging**:
+   - When the change to `version.txt` is merged into the `master` branch, a GitHub Actions workflow automatically creates a new Git tag based on the version number in `version.txt`.
+   - The tag will follow the format:
+     - `v*.*.*` for regular releases (e.g., `v1.1.0`).
+     - `v*.*.*-rc*` for release candidates (e.g., `v1.1.0-rc1`).
+
+5. **Release Process**:
+   - The creation of the tag will trigger a separate GitHub Actions workflow that runs GoReleaser to build and publish the release.
+   - This process will include:
+     - **Building and publishing binaries**.
+     - **Creating a new Docker image and pushing it to DockerHub**.
+
+### Example Workflow:
+
+1. Update `version.txt` with the new version number (e.g., `v1.1.0` or `v1.1.0-rc1`).
+2. Commit the change: `git commit -m "chore/version_Update-to-v1.1.0"`.
+3. Submit a PR for review.
+4. After the PR is approved and merged into `master`, the tagging workflow will automatically create a new tag (e.g., `v1.1.0`).
+5. The release workflow will then:
+   - Build and publish the new version using GoReleaser.
+   - Create and push a new Docker image to DockerHub.
 
 ## Style Guide
 
