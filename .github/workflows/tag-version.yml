@@ -2,8 +2,10 @@ name: Tag on Version Change
 
 on:
   push:
+    branches:
+      - master  
     paths:
-      - "version/version.txt"  # Monitor changes to version.txt
+      - "version/version.txt"  
 
 jobs:
   create_tag:
