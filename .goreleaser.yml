@@ -10,7 +10,7 @@ builds:
       - amd64
       - arm64
     ldflags: 
-      - -s -w -X bbox/version.version={{.Version}} -X bbox/version.commit={{.Commit}} -X bbox/version.date={{.Date}} -X bbox/version.builtBy=goreleaser
+      - -s -w 
 
 archives:
   - format: tar.gz
