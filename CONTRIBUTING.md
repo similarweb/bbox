@@ -88,7 +88,7 @@ The version number in `version/version.txt` follows semantic versioning:
 ### Versioning Workflow
 
 1. **Updating the Version**:
-   - Before submitting a Pull Request (PR), update the `version.txt` file with the new version number based on the changes you are introducing (e.g., `v1.1.0` or `v1.1.0-rc1` for release candidates).
+   - Before submitting a Pull Request (PR), update the `version.txt` file with the new version number based on the changes you are introducing (e.g., `1.1.0` or `1.1.0-rc1` for release candidates).
 
 2. **Committing the Version Change**:
    - Commit the change to `version.txt` with a descriptive commit message following our convention.
@@ -109,9 +109,9 @@ The version number in `version/version.txt` follows semantic versioning:
      - **Building and publishing binaries**.
      - **Creating a new Docker image and pushing it to DockerHub**.
 
-### Example Workflow:
+### Example Workflow
 
-1. Update `version.txt` with the new version number (e.g., `v1.1.0` or `v1.1.0-rc1`).
+1. Update `version.txt` with the new version number (e.g., `1.1.0` or `1.1.0-rc1`).
 2. Commit the change: `git commit -m "chore/version_Update-to-v1.1.0"`.
 3. Submit a PR for review.
 4. After the PR is approved and merged into `master`, the tagging workflow will automatically create a new tag (e.g., `v1.1.0`).
