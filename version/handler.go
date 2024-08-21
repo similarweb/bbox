@@ -1,14 +1,17 @@
 package version
 
 import (
+	"embed"
 	"log"
-	"os"
 	"strings"
 )
 
 var (
 	// Version is loaded from version.txt file
 	version = loadVersionFromFile()
+
+	//go:embed version.txt
+	embedFS embed.FS
 )
 
 func GetVersion() string {
@@ -16,7 +19,7 @@ func GetVersion() string {
 }
 
 func loadVersionFromFile() string {
-	data, err := os.ReadFile("version/version.txt")
+	data, err := embedFS.ReadFile("version.txt")
 	if err != nil {
 		log.Fatalf("Failed to read version file: %v", err)
 	}
