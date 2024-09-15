@@ -2,32 +2,27 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
-      - 'v*.*.*-rc*'
-    branches:
-      - master
+      - "v*.*.*"
+      - "v*.*.*-rc*"
 
 permissions:
-      contents: write
-      actions: write
-      repository-projects: write 
+  contents: write
+  actions: write
+  repository-projects: write
 
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - 
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - 
-        name: Set up Go
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: 1.22.3
-      - 
-        name: GoReleaser
+      - name: GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
@@ -41,14 +36,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get the latest tag
+        id: get_version
+        run: |
+          TAG=$(git describe --abbrev=0)
+          echo "Latest tag: $TAG"
+          echo "::set-output name=VERSION::$TAG"
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Build & Push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: similarweb/bbox:${{ github.ref_name }}, similarweb/bbox:latest
+          tags: |
+            similarweb/bbox:${{ steps.get_version.outputs.VERSION }}
+            similarweb/bbox:latest
