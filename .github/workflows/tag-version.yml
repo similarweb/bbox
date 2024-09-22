@@ -1,11 +1,11 @@
-name: Tag on Version Change
+name: Tag Version
 
 on:
   push:
     branches:
-      - master  
+      - master
     paths:
-      - "version/version.txt"  
+      - "version/version.txt"
 
 permissions:
   contents: write

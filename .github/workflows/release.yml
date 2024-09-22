@@ -1,9 +1,9 @@
 name: Release
 on:
-  push:
-    tags:
-      - "v*.*.*"
-      - "v*.*.*-rc*"
+  workflow_run:
+    workflows: ["Tag Version"]
+    types:
+      - completed
 
 permissions:
   contents: write
@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   goreleaser:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,6 +32,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   push:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     needs: goreleaser
     steps:
