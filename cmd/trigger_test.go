@@ -119,7 +119,7 @@ func TestTrigger(t *testing.T) {
 				mockArtifacts.On("GetArtifactChildren", tt.triggerBuildResponse.ID).Return(tt.getArtifactChildrenResponse, tt.getArtifactChildrenError)
 			}
 
-			trigger(client, tt.buildTypeID, tt.branchName, tt.artifactsPath, tt.properties, tt.requireArtifacts, tt.waitForBuild, tt.downloadArtifacts, tt.waitForBuildTimeout)
+			trigger(client, tt.buildTypeID, tt.branchName, tt.artifactsPath, tt.properties, tt.requireArtifacts, tt.waitForBuild, tt.downloadArtifacts, tt.waitForBuildTimeout, false)
 
 			mockBuild.AssertExpectations(t)
 			mockArtifacts.AssertExpectations(t)
