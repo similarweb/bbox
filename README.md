@@ -84,6 +84,7 @@ The trigger command is used to trigger a single TeamCity build. It allows you to
 | `--require-artifacts`         | If downloadArtifacts is true, and no artifacts found, return an error |
 | `-w, --wait-for-build`        | Wait for build to finish and get status           |
 | `-t, --wait-timeout duration` | Timeout for waiting for build to finish (default 15m0s) |
+| `--fail-on-error`             | Fail command if build status is not SUCCESS (only valid with --wait-for-build) |
 
 #### Example
 

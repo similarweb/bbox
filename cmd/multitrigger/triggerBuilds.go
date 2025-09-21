@@ -5,9 +5,10 @@ import (
 	"bbox/teamcity"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // triggerBuilds triggers the builds for each set of build parameters, wait and download artifacts if needed using work group.

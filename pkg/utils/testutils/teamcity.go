@@ -3,9 +3,10 @@ package testutils
 import (
 	"bbox/pkg/types"
 	"bbox/teamcity"
-	"github.com/stretchr/testify/mock"
 	"net/http"
 	"time"
+
+	"github.com/stretchr/testify/mock"
 )
 
 type MockTeamCityClient struct {
